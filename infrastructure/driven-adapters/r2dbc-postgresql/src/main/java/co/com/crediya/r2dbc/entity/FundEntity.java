@@ -4,6 +4,8 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
+import java.math.BigDecimal;
+
 @Table("fund_application")
 @AllArgsConstructor
 @NoArgsConstructor
@@ -14,5 +16,9 @@ public class FundEntity {
 
     @Id
     private String id;
-    private String amount;
+    private BigDecimal amount;
+    private Long term;
+    private String email;
+    private String idStatus;
+    private String idLoanType;
 }

@@ -1,6 +1,7 @@
 package co.com.crediya.api;
 
-import co.com.crediya.model.fundapplication.FundApplication;
+import co.com.crediya.api.dto.CreateFundApplication;
+import co.com.crediya.api.mapper.FundDtoMapper;
 import co.com.crediya.usecase.fundapplication.FundApplicationUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -14,9 +15,11 @@ import reactor.core.publisher.Mono;
 public class Handler {
 
     private final FundApplicationUseCase fundApplicationUseCase;
+    private final FundDtoMapper fundDtoMapper;
 
     public Mono<ServerResponse> listenSaveFundApplication(ServerRequest serverRequest){
-        return serverRequest.bodyToMono(FundApplication.class)
+        return serverRequest.bodyToMono(CreateFundApplication.class)
+                .map(fundDtoMapper::toModel)
                 .flatMap(fundApplicationUseCase::saveFundApplication)
                 .flatMap(savedFundApplication -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
