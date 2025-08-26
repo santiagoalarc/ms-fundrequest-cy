@@ -1,6 +1,8 @@
 package co.com.crediya.model.fundapplication;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -10,5 +12,10 @@ import lombok.*;
 public class FundApplication {
 
     private String id;
-    private String amount;
+    private String documentIdentification;
+    private BigDecimal amount;
+    private Long term;
+    private String email;
+    private String idStatus;
+    private String idLoanType;
 }

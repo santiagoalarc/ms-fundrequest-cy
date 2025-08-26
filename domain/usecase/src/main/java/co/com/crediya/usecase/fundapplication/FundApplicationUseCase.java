@@ -12,9 +12,6 @@ public class FundApplicationUseCase {
 
     public Mono<FundApplication> saveFundApplication(FundApplication fundApplication){
         return Mono.justOrEmpty(fundApplication)
-                .map(fundApp -> fundApp.toBuilder()
-                        //.id(UUID.randomUUID().toString())
-                        .build())
                 .flatMap(fundApplicationRepository::save);
     }
 }
