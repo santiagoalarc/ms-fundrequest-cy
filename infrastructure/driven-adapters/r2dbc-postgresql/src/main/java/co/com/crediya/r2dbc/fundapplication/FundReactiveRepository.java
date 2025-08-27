@@ -1,6 +1,5 @@
-package co.com.crediya.r2dbc;
+package co.com.crediya.r2dbc.fundapplication;
 
-import co.com.crediya.r2dbc.entity.FundEntity;
 import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 

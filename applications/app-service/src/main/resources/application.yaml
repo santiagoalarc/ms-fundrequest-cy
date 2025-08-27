@@ -49,7 +49,8 @@ adapter:
     timeout: 5000
     retry: 2
     user:
-      url: "http://localhost:8080"
+      host: "http://localhost:8080"
+      url: "/api/v1/usuario/"
 resilience4j:
   circuitbreaker:
     instances:
