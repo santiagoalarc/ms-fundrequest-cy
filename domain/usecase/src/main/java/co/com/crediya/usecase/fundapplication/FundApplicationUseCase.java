@@ -10,15 +10,21 @@ import co.com.crediya.model.user.gateways.UserRestService;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 @RequiredArgsConstructor
 public class FundApplicationUseCase {
 
     private final FundApplicationRepository fundApplicationRepository;
     private final LoanTypeRepository loanTypeRepository;
     private final UserRestService userRestService;
-
+    private final Logger log = Logger.getLogger(FundApplicationUseCase.class.getName());
 
     public Mono<FundApplication> saveFundApplication(FundApplication fundApplication){
+
+        log.log(Level.INFO,"ENTER TO CREATE FUND APPLICATION - {}", fundApplication);
+
         return Mono.justOrEmpty(fundApplication)
                 .flatMap(fundApp -> loanTypeRepository.findById(fundApp.getIdLoanType())
                         .switchIfEmpty(Mono.defer(() -> Mono.error(new FundException(FundErrorEnum.LOAN_TYPE_ID_NOT_FOUND))))
@@ -35,6 +41,8 @@ public class FundApplicationUseCase {
                 .map(fundReq -> fundReq.toBuilder()
                         .statusId(FundStatusEnum.PENDING.getId())
                         .build())
-                .flatMap(fundApplicationRepository::save);
+                .flatMap(fundApplicationRepository::save)
+                .doOnError(err -> log.info("ERROR IN CREATE FUND APPLICATION " + err.getMessage()))
+                .doOnSuccess(userCreated -> log.info("CREATE FUND APPLICATION SUCCESSFUL :: id- " + userCreated.getId()));
     }
 }
