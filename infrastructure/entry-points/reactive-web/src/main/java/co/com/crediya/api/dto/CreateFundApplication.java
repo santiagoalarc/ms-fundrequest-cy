@@ -8,6 +8,5 @@ public record CreateFundApplication(
         BigDecimal amount,
         Long term,
         String email,
-        String idStatus,
         String idLoanType) {
 }

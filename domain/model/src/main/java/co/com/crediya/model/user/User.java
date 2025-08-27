@@ -9,5 +9,10 @@ import lombok.*;
 @Builder(toBuilder = true)
 public class User {
 
-    private String documentNumber;
+    private String id;
+    private String name;
+    private String lastName;
+    private String email;
+    private String documentIdentification;
+    private String baseSalary;
 }

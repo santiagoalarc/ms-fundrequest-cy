@@ -1,7 +1,8 @@
-package co.com.crediya.r2dbc.entity;
+package co.com.crediya.r2dbc.fundapplication;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.math.BigDecimal;
@@ -19,6 +20,8 @@ public class FundEntity {
     private BigDecimal amount;
     private Long term;
     private String email;
-    private String idStatus;
+    @Column("id_status")
+    private String statusId;
+    @Column("id_loan_type")
     private String idLoanType;
 }

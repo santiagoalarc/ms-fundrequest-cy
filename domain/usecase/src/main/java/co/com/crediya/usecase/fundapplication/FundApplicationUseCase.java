@@ -1,17 +1,48 @@
 package co.com.crediya.usecase.fundapplication;
 
+import co.com.crediya.enums.FundErrorEnum;
+import co.com.crediya.enums.FundStatusEnum;
+import co.com.crediya.exceptions.FundException;
 import co.com.crediya.model.fundapplication.FundApplication;
 import co.com.crediya.model.fundapplication.gateways.FundApplicationRepository;
+import co.com.crediya.model.loantype.gateways.LoanTypeRepository;
+import co.com.crediya.model.user.gateways.UserRestService;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @RequiredArgsConstructor
 public class FundApplicationUseCase {
 
     private final FundApplicationRepository fundApplicationRepository;
+    private final LoanTypeRepository loanTypeRepository;
+    private final UserRestService userRestService;
+    private final Logger log = Logger.getLogger(FundApplicationUseCase.class.getName());
 
     public Mono<FundApplication> saveFundApplication(FundApplication fundApplication){
+
+        log.log(Level.INFO,"ENTER TO CREATE FUND APPLICATION - {}", fundApplication);
+
         return Mono.justOrEmpty(fundApplication)
-                .flatMap(fundApplicationRepository::save);
+                .flatMap(fundApp -> loanTypeRepository.findById(fundApp.getIdLoanType())
+                        .switchIfEmpty(Mono.defer(() -> Mono.error(new FundException(FundErrorEnum.LOAN_TYPE_ID_NOT_FOUND))))
+                        .filter(loanType -> loanType.getMaxAmount().compareTo(fundApp.getAmount()) >= 0
+                                && loanType.getMinAmount().compareTo(fundApp.getAmount()) <= 0)
+                        .switchIfEmpty(Mono.defer(() -> Mono.error(new FundException(FundErrorEnum.LOAN_AMOUNT_OUT_OF_RANGE))))
+                        .thenReturn(fundApp)
+                )
+                .flatMap(fundApp -> Mono.just(fundApp)
+                        .flatMap(fund -> userRestService.findUserByDocumentNumber(fund.getDocumentIdentification()))
+                        .switchIfEmpty(Mono.defer(() -> Mono.error(new FundException(FundErrorEnum.DOCUMENT_IDENTIFICATION_NOT_FOUND))))
+                        .thenReturn(fundApp)
+                )
+                .map(fundReq -> fundReq.toBuilder()
+                        .statusId(FundStatusEnum.PENDING.getId())
+                        .build())
+                .flatMap(fundApplicationRepository::save)
+                .doOnError(err -> log.info("ERROR IN CREATE FUND APPLICATION " + err.getMessage()))
+                .doOnSuccess(userCreated -> log.info("CREATE FUND APPLICATION SUCCESSFUL :: id- " + userCreated.getId()));
     }
 }

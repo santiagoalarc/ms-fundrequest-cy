@@ -16,6 +16,6 @@ public class FundApplication {
     private BigDecimal amount;
     private Long term;
     private String email;
-    private String idStatus;
+    private String statusId;
     private String idLoanType;
 }
