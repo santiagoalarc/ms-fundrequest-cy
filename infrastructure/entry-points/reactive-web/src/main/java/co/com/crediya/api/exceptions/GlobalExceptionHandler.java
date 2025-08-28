@@ -19,6 +19,15 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, status);
     }
 
+    @ExceptionHandler(ValidateModelException.class)
+    public ResponseEntity<ErrorResponse> handleModelException(ValidateModelException ex){
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        String message = ex.getMessage();
+
+        ErrorResponse errorResponse = new ErrorResponse(status.value(), message);
+        return new ResponseEntity<>(errorResponse, status);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
         ErrorResponse errorResponse = new ErrorResponse(
