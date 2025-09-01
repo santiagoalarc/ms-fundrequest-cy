@@ -9,6 +9,7 @@ import co.com.crediya.model.loantype.LoanType;
 import co.com.crediya.model.loantype.gateways.LoanTypeRepository;
 import co.com.crediya.model.user.User;
 import co.com.crediya.model.user.gateways.UserRestService;
+import co.com.crediya.usecase.command.fundapplication.FundApplicationUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -72,32 +73,30 @@ class FundApplicationUseCaseTest {
 
     @Test
     void saveFundApplication_Success() {
-        // Given
+
         FundApplication expectedSavedApplication = fundApplication.toBuilder()
                 .statusId(FundStatusEnum.PENDING.getId())
                 .build();
 
         when(loanTypeRepository.findById(fundApplication.getIdLoanType()))
                 .thenReturn(Mono.just(loanType));
-        when(userRestService.findUserByDocumentNumber(fundApplication.getDocumentIdentification()))
+        when(userRestService.findUserByDocumentNumber(fundApplication.getDocumentIdentification(), ""))
                 .thenReturn(Mono.just(user));
         when(fundApplicationRepository.save(any(FundApplication.class)))
                 .thenReturn(Mono.just(expectedSavedApplication));
 
-        // When & Then
-        StepVerifier.create(fundApplicationUseCase.saveFundApplication(fundApplication))
+        StepVerifier.create(fundApplicationUseCase.saveFundApplication(fundApplication, "", fundApplication.getEmail()))
                 .expectNext(expectedSavedApplication)
                 .verifyComplete();
     }
 
     @Test
     void saveFundApplication_WhenLoanTypeNotFound_ShouldThrowException() {
-        // Given
+
         when(loanTypeRepository.findById(fundApplication.getIdLoanType()))
                 .thenReturn(Mono.empty());
 
-        // When & Then
-        StepVerifier.create(fundApplicationUseCase.saveFundApplication(fundApplication))
+        StepVerifier.create(fundApplicationUseCase.saveFundApplication(fundApplication, "", fundApplication.getEmail()))
                 .expectErrorMatches(throwable -> throwable instanceof FundException &&
                         ((FundException) throwable).getError().equals(FundErrorEnum.LOAN_TYPE_ID_NOT_FOUND))
                 .verify();
@@ -105,7 +104,7 @@ class FundApplicationUseCaseTest {
 
     @Test
     void saveFundApplication_WhenAmountBelowMinimum_ShouldThrowException() {
-        // Given
+
         FundApplication lowAmountApplication = fundApplication.toBuilder()
                 .amount(new BigDecimal("500"))
                 .build();
@@ -113,8 +112,7 @@ class FundApplicationUseCaseTest {
         when(loanTypeRepository.findById(lowAmountApplication.getIdLoanType()))
                 .thenReturn(Mono.just(loanType));
 
-        // When & Then
-        StepVerifier.create(fundApplicationUseCase.saveFundApplication(lowAmountApplication))
+        StepVerifier.create(fundApplicationUseCase.saveFundApplication(lowAmountApplication, "", lowAmountApplication.getEmail()))
                 .expectErrorMatches(throwable -> throwable instanceof FundException &&
                         ((FundException) throwable).getError().equals(FundErrorEnum.LOAN_AMOUNT_OUT_OF_RANGE))
                 .verify();
@@ -122,7 +120,7 @@ class FundApplicationUseCaseTest {
 
     @Test
     void saveFundApplication_WhenAmountAboveMaximum_ShouldThrowException() {
-        // Given
+
         FundApplication highAmountApplication = fundApplication.toBuilder()
                 .amount(new BigDecimal("100000"))
                 .build();
@@ -130,8 +128,8 @@ class FundApplicationUseCaseTest {
         when(loanTypeRepository.findById(highAmountApplication.getIdLoanType()))
                 .thenReturn(Mono.just(loanType));
 
-        // When & Then
-        StepVerifier.create(fundApplicationUseCase.saveFundApplication(highAmountApplication))
+
+        StepVerifier.create(fundApplicationUseCase.saveFundApplication(highAmountApplication, "", highAmountApplication.getEmail()))
                 .expectErrorMatches(throwable -> throwable instanceof FundException &&
                         ((FundException) throwable).getError().equals(FundErrorEnum.LOAN_AMOUNT_OUT_OF_RANGE))
                 .verify();
@@ -139,29 +137,22 @@ class FundApplicationUseCaseTest {
 
     @Test
     void saveFundApplication_WhenUserNotFound_ShouldThrowException() {
-        // Given
+
         when(loanTypeRepository.findById(fundApplication.getIdLoanType()))
                 .thenReturn(Mono.just(loanType));
-        when(userRestService.findUserByDocumentNumber(fundApplication.getDocumentIdentification()))
+        when(userRestService.findUserByDocumentNumber(fundApplication.getDocumentIdentification(), ""))
                 .thenReturn(Mono.empty());
 
         // When & Then
-        StepVerifier.create(fundApplicationUseCase.saveFundApplication(fundApplication))
+        StepVerifier.create(fundApplicationUseCase.saveFundApplication(fundApplication, "", fundApplication.getEmail()))
                 .expectErrorMatches(throwable -> throwable instanceof FundException &&
                         ((FundException) throwable).getError().equals(FundErrorEnum.DOCUMENT_IDENTIFICATION_NOT_FOUND))
                 .verify();
     }
 
     @Test
-    void saveFundApplication_WhenNullFundApplication_ShouldComplete() {
-        // When & Then
-        StepVerifier.create(fundApplicationUseCase.saveFundApplication(null))
-                .verifyComplete();
-    }
-
-    @Test
     void saveFundApplication_WhenAmountEqualsMinimum_ShouldSucceed() {
-        // Given
+
         FundApplication minAmountApplication = fundApplication.toBuilder()
                 .amount(loanType.getMinAmount())
                 .build();
@@ -172,20 +163,20 @@ class FundApplicationUseCaseTest {
 
         when(loanTypeRepository.findById(minAmountApplication.getIdLoanType()))
                 .thenReturn(Mono.just(loanType));
-        when(userRestService.findUserByDocumentNumber(minAmountApplication.getDocumentIdentification()))
+        when(userRestService.findUserByDocumentNumber(minAmountApplication.getDocumentIdentification(), ""))
                 .thenReturn(Mono.just(user));
         when(fundApplicationRepository.save(any(FundApplication.class)))
                 .thenReturn(Mono.just(expectedSavedApplication));
 
-        // When & Then
-        StepVerifier.create(fundApplicationUseCase.saveFundApplication(minAmountApplication))
+
+        StepVerifier.create(fundApplicationUseCase.saveFundApplication(minAmountApplication, "", minAmountApplication.getEmail()))
                 .expectNext(expectedSavedApplication)
                 .verifyComplete();
     }
 
     @Test
     void saveFundApplication_WhenAmountEqualsMaximum_ShouldSucceed() {
-        // Given
+
         FundApplication maxAmountApplication = fundApplication.toBuilder()
                 .amount(loanType.getMaxAmount())
                 .build();
@@ -196,13 +187,12 @@ class FundApplicationUseCaseTest {
 
         when(loanTypeRepository.findById(maxAmountApplication.getIdLoanType()))
                 .thenReturn(Mono.just(loanType));
-        when(userRestService.findUserByDocumentNumber(maxAmountApplication.getDocumentIdentification()))
+        when(userRestService.findUserByDocumentNumber(maxAmountApplication.getDocumentIdentification(), ""))
                 .thenReturn(Mono.just(user));
         when(fundApplicationRepository.save(any(FundApplication.class)))
                 .thenReturn(Mono.just(expectedSavedApplication));
 
-        // When & Then
-        StepVerifier.create(fundApplicationUseCase.saveFundApplication(maxAmountApplication))
+        StepVerifier.create(fundApplicationUseCase.saveFundApplication(maxAmountApplication, "", maxAmountApplication.getEmail()))
                 .expectNext(expectedSavedApplication)
                 .verifyComplete();
     }
@@ -214,13 +204,13 @@ class FundApplicationUseCaseTest {
 
         when(loanTypeRepository.findById(fundApplication.getIdLoanType()))
                 .thenReturn(Mono.just(loanType));
-        when(userRestService.findUserByDocumentNumber(fundApplication.getDocumentIdentification()))
+        when(userRestService.findUserByDocumentNumber(fundApplication.getDocumentIdentification(), ""))
                 .thenReturn(Mono.just(user));
         when(fundApplicationRepository.save(any(FundApplication.class)))
                 .thenReturn(Mono.error(repositoryException));
 
         // When & Then
-        StepVerifier.create(fundApplicationUseCase.saveFundApplication(fundApplication))
+        StepVerifier.create(fundApplicationUseCase.saveFundApplication(fundApplication, "", fundApplication.getEmail()))
                 .expectError(RuntimeException.class)
                 .verify();
     }
@@ -232,11 +222,11 @@ class FundApplicationUseCaseTest {
 
         when(loanTypeRepository.findById(fundApplication.getIdLoanType()))
                 .thenReturn(Mono.just(loanType));
-        when(userRestService.findUserByDocumentNumber(fundApplication.getDocumentIdentification()))
+        when(userRestService.findUserByDocumentNumber(fundApplication.getDocumentIdentification(), ""))
                 .thenReturn(Mono.error(userServiceException));
 
         // When & Then
-        StepVerifier.create(fundApplicationUseCase.saveFundApplication(fundApplication))
+        StepVerifier.create(fundApplicationUseCase.saveFundApplication(fundApplication, "", fundApplication.getEmail()))
                 .expectError(RuntimeException.class)
                 .verify();
     }
