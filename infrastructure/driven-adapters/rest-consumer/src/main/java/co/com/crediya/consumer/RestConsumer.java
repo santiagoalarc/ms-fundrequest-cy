@@ -30,12 +30,13 @@ public class RestConsumer implements UserRestService {
 
 
     @Override
-    public Mono<User> findUserByDocumentNumber(String documentNumber) {
+    public Mono<User> findUserByDocumentNumber(String documentNumber, String token) {
         return client.get()
                 .uri(uriBuilder -> uriBuilder
                         .path(urlFindByDocument.concat(documentNumber))
                         .build()
                 )
+                .header("Authorization", "Bearer " + token)
                 .retrieve()
                 .onStatus(
                         HttpStatus.INTERNAL_SERVER_ERROR::equals,

@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: ${PORT:80}
 spring:
   application:
     name: "MsFundRequest"
@@ -30,20 +30,28 @@ management:
   health:
     circuitbreakers:
       enabled: true
+
 cors:
-  allowed-origins: "http://localhost:4200,http://localhost:8080"
+  allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}
+
 routes:
   paths:
     funds: "/api/v1/solicitud"
     fundsById: "/api/v1/solicitud/{id}"
+
 adapters:
   r2dbc:
-    host: "localhost"
+    host: ${SPRING_DATASOURCE_HOST}
     port: 5432
-    database: "postgres"
+    database: ${SPRING_DATASOURCE_DATABASE}
     schema: "public"
-    username: "postgres"
-    password: "postgres"
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+
 adapter:
   restconsumer:
     timeout: 5000

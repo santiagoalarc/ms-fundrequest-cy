@@ -5,5 +5,5 @@ import reactor.core.publisher.Mono;
 
 public interface UserRestService {
 
-    Mono<User> findUserByDocumentNumber(String documentNumber);
+    Mono<User> findUserByDocumentNumber(String documentNumber, String token);
 }
