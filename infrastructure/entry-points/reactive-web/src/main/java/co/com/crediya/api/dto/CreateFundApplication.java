@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 import java.math.BigDecimal;
 
 public record CreateFundApplication(
-        String id,
         @NotBlank(message = "NAME_CANNOT_BE_EMPTY_OR_NULL")
         String documentIdentification,
         BigDecimal amount,

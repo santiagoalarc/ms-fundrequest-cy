@@ -17,10 +17,10 @@ public class JwtFilter implements WebFilter {
         String path = request.getPath().value();
 
         if(path.contains("auth") ||
+                path.startsWith("/webjars/swagger-ui") ||
                 path.startsWith("/swagger-ui") ||
                 path.startsWith("/v3/api-docs") ||
-                path.startsWith("/api-docs") ||
-                path.startsWith("/api/v1/login")
+                path.startsWith("/api-docs")
         )
             return chain.filter(exchange);
         String auth = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);

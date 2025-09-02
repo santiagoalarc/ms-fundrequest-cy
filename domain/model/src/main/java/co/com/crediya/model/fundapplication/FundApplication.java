@@ -11,7 +11,6 @@ import java.math.BigDecimal;
 @Builder(toBuilder = true)
 public class FundApplication {
 
-    private String id;
     private String documentIdentification;
     private BigDecimal amount;
     private Long term;
