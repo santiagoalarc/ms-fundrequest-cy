@@ -1,5 +1,7 @@
 package co.com.crediya.enums;
 
+import java.util.UUID;
+
 public enum FundStatusEnum {
 
     PENDING("7f32a490-9eda-4393-89c2-cd3b9c49ecac"),
@@ -15,7 +17,7 @@ public enum FundStatusEnum {
         this.id = id;
     }
 
-    public String getId() {
-        return id;
+    public UUID getId() {
+        return UUID.fromString(id);
     }
 }

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -13,7 +14,7 @@ import java.math.BigDecimal;
 @Builder(toBuilder = true)
 public class LoanType {
 
-    private String id;
+    private UUID id;
     private String name;
     private String creationDate;
     private BigDecimal maxAmount;

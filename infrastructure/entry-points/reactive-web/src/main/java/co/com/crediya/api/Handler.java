@@ -4,6 +4,8 @@ import co.com.crediya.api.config.BaseValidator;
 import co.com.crediya.api.dto.CreateFundApplication;
 import co.com.crediya.api.mapper.FundDtoMapper;
 import co.com.crediya.api.security.JwtProvider;
+import co.com.crediya.model.common.PageRequestModel;
+import co.com.crediya.model.fundapplication.FundApplicationFilter;
 import co.com.crediya.usecase.command.fundapplication.FundApplicationUseCase;
 import co.com.crediya.usecase.handler.FundApplicationListUseCase;
 import lombok.RequiredArgsConstructor;
@@ -61,8 +63,20 @@ public class Handler {
         } catch (NumberFormatException e) {
             return ServerResponse.badRequest().bodyValue("Size and page must be valid integers.");
         }
+        //TODO esta logica debe ir aquí o en el caso de uso?
 
-        return fundApplicationListUseCase.findFundApplicationList(email, status, loanType, size, page)
+        FundApplicationFilter filter = FundApplicationFilter.builder()
+                .email(email)
+                .loanType(loanType)
+                .status(status)
+                .build();
+
+        PageRequestModel pageRequestModel = PageRequestModel.builder()
+                .size(size)
+                .page(page)
+                .build();
+
+        return fundApplicationListUseCase.findFundApplicationList(filter, pageRequestModel)
                 .flatMap(fundApplicationsPage -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(fundApplicationsPage));

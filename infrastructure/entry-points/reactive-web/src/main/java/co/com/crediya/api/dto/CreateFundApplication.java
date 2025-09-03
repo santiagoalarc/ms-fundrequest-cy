@@ -13,5 +13,5 @@ public record CreateFundApplication(
         @NotBlank(message = "EMAIL_CANNOT_BE_EMPTY_OR_NULL")
         @Email(message = "EMAIL_IS_NOT_VALID")
         String email,
-        String idLoanType) {
+        String loanType) {
 }

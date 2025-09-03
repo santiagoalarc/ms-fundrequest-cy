@@ -42,6 +42,7 @@ routes:
   paths:
     funds: "/api/v1/solicitud"
     fundsById: "/api/v1/solicitud/{id}"
+    fundsPageable:  "/api/v1/solicitud"
 
 adapters:
   r2dbc:
