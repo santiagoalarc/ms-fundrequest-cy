@@ -60,6 +60,7 @@ adapter:
     user:
       host: "http://localhost:8080"
       url: "/api/v1/usuario/"
+      url-users-email: "/api/v1/usuarios-by-email"
 resilience4j:
   circuitbreaker:
     instances:

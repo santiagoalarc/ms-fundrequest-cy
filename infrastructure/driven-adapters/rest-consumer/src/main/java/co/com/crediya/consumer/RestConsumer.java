@@ -28,6 +28,9 @@ public class RestConsumer implements UserRestService {
     @Value("${adapter.restconsumer.user.url}")
     private String urlFindByDocument;
 
+    @Value("${adapter.restconsumer.user.url-users-email}")
+    private String urlFindByEmails;
+
     @Value("${adapter.restconsumer.retry}")
     private Integer retry;
 
@@ -53,7 +56,8 @@ public class RestConsumer implements UserRestService {
     public Flux<User> findUsersByEmail(List<String> emails) {
         return client.get()
                 .uri(uriBuilder -> uriBuilder
-                        .queryParam("emails", emails) //TODO validar como se está enviando
+                        .path(urlFindByEmails)
+                        .queryParam("emails", String.join(",", emails))
                         .build()
                 )
                 .retrieve()
