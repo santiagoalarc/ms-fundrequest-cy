@@ -39,13 +39,16 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/api-docs/**",
                                 "/webjars/**",
-                                "/swagger-resources/**"
+                                "/swagger-resources/**",
+                                "/favicon.ico"
                         ).permitAll()
                         .pathMatchers(
                                 "/h2-console/**",
                                 "/auth/login",
+                                "/favicon.ico",
                                 "/health/**"
                         ).permitAll()
+                        .pathMatchers("/favicon.ico", "/css/**", "/js/**").permitAll()
                         .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyExchange().authenticated()
                 )

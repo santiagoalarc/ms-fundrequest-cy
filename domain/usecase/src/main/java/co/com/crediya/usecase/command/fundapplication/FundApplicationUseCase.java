@@ -43,7 +43,7 @@ public class FundApplicationUseCase {
                         .thenReturn(fundApp)
                 )
                 .map(fundReq -> fundReq.toBuilder()
-                        .statusId(FundStatusEnum.PENDING.getId())
+                        .idStatus(FundStatusEnum.PENDING.getId())
                         .build())
                 .flatMap(fundApplicationRepository::save)
                 .doOnError(err -> log.info("ERROR IN CREATE FUND APPLICATION " + err.getMessage()))

@@ -12,8 +12,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.reactive.TransactionalOperator;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Repository
@@ -41,10 +43,10 @@ public class FundRepositoryAdapter extends ReactiveAdapterOperations<
 
     @Override
     public Mono<PagedResult<FundAppCustomer>> findPagedByFilter(FundApplicationFilter filter, PageRequestModel pageRequest) {
-        Pageable pageable = PageRequest.of(pageRequest.getPage(), pageRequest.getSize());
-        return repository.findAllByEmailAndStatusAndLoanType(filter.getEmail(), filter.getStatus(), filter.getLoanType(), pageable)
+        Pageable pageable = PageRequest.of(pageRequest.getPage() - 1, pageRequest.getSize());
+        return repository.findAllByEmailAndStatusAndLoanType(filter.getEmail(), filter.getStatusId(), filter.getLoanTypeId(), pageable)
                 .collectList()
-                .zipWith(this.repository.countByFilters(filter.getEmail(), filter.getStatus(), filter.getLoanType()))
+                .zipWith(this.repository.countByFilters(filter.getEmail(), filter.getStatusId(), filter.getLoanTypeId()))
                 .map(tupleFund -> PagedResult.<FundAppCustomer>builder()
                         .content(tupleFund.getT1().stream()
                                 .map(fundEntity -> mapper.map(fundEntity, FundAppCustomer.class))
@@ -54,5 +56,12 @@ public class FundRepositoryAdapter extends ReactiveAdapterOperations<
                         .page(pageRequest.getPage())
                         .size(pageRequest.getSize())
                         .build());
+    }
+
+    @Override
+    public Flux<FundApplication> findAllByEmailIn(List<String> emails) {
+
+        return repository.findAllByEmailIn(emails)
+                .map(this::toEntity);
     }
 }

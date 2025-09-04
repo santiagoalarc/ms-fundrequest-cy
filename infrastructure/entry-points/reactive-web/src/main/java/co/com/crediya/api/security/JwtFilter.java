@@ -20,7 +20,8 @@ public class JwtFilter implements WebFilter {
                 path.startsWith("/webjars/swagger-ui") ||
                 path.startsWith("/swagger-ui") ||
                 path.startsWith("/v3/api-docs") ||
-                path.startsWith("/api-docs")
+                path.startsWith("/api-docs") ||
+                path.startsWith("/favicon.ico")
         )
             return chain.filter(exchange);
         String auth = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);

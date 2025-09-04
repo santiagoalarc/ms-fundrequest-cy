@@ -12,124 +12,148 @@ import co.com.crediya.model.user.gateways.UserRestService;
 import co.com.crediya.usecase.command.fundapplication.FundApplicationUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 class FundApplicationUseCaseTest {
 
-    @Mock
     private FundApplicationRepository fundApplicationRepository;
-
-    @Mock
     private LoanTypeRepository loanTypeRepository;
-
-    @Mock
     private UserRestService userRestService;
-
-    @InjectMocks
     private FundApplicationUseCase fundApplicationUseCase;
-
-    private FundApplication fundApplication;
-    private LoanType loanType;
-    private User user;
-    private final String userEmail = "test@crediya.com";
 
     @BeforeEach
     void setUp() {
-
-        fundApplication = FundApplication.builder()
-                .documentIdentification("123456789")
-                .email(userEmail)
-                .amount(BigDecimal.valueOf(1000000))
-                .idLoanType("credito_de_libre_inversion")
-                .build();
-
-        loanType = LoanType.builder()
-                .name("credito_de_libre_inversion")
-                .minAmount(BigDecimal.valueOf(500000))
-                .maxAmount(BigDecimal.valueOf(2000000))
-                .build();
-
-        user = User.builder()
-                .email(userEmail)
-                .documentIdentification("123456789")
-                .build();
+        fundApplicationRepository = Mockito.mock(FundApplicationRepository.class);
+        loanTypeRepository = Mockito.mock(LoanTypeRepository.class);
+        userRestService = Mockito.mock(UserRestService.class);
+        fundApplicationUseCase = new FundApplicationUseCase(fundApplicationRepository, loanTypeRepository, userRestService);
     }
 
     @Test
-    void saveFundApplication_Success_ReturnsFundApplicationWithPendingStatus() {
+    void saveFundApplication_success() {
+        FundApplication fundApplication = FundApplication.builder()
+                .email("test@email.com")
+                .loanType("PERSONAL")
+                .amount(BigDecimal.valueOf(5000))
+                .documentIdentification("123456")
+                .build();
 
-        when(loanTypeRepository.findByName(anyString())).thenReturn(Mono.just(loanType));
-        when(userRestService.findUserByDocumentNumber(anyString())).thenReturn(Mono.just(user));
-        when(fundApplicationRepository.save(any(FundApplication.class))).thenReturn(Mono.just(fundApplication.toBuilder().statusId(FundStatusEnum.PENDING.getId()).build()));
+        UUID loanTypeId = UUID.randomUUID();
 
+        LoanType loanType = LoanType.builder()
+                .id(loanTypeId)
+                .name("PERSONAL")
+                .minAmount(BigDecimal.valueOf(1000))
+                .maxAmount(BigDecimal.valueOf(10000))
+                .build();
 
-        StepVerifier.create(fundApplicationUseCase.saveFundApplication(fundApplication, userEmail))
-                .expectNextMatches(savedApplication ->
-                        savedApplication.getStatusId().equals(FundStatusEnum.PENDING.getId()) &&
-                                savedApplication.getEmail().equals(userEmail) &&
-                                savedApplication.getAmount().equals(fundApplication.getAmount()))
+        FundApplication savedFund = fundApplication.toBuilder()
+                .idLoanType(loanTypeId)
+                .idStatus(FundStatusEnum.PENDING.getId())
+                .build();
+
+        when(loanTypeRepository.findByName("PERSONAL")).thenReturn(Mono.just(loanType));
+        when(userRestService.findUserByDocumentNumber("123456")).thenReturn(Mono.just(new User()));
+        when(fundApplicationRepository.save(any(FundApplication.class))).thenReturn(Mono.just(savedFund));
+
+        StepVerifier.create(fundApplicationUseCase.saveFundApplication(fundApplication, "test@email.com"))
+                .expectNextMatches(result ->
+                        loanTypeId.equals(result.getIdLoanType())
+                                && FundStatusEnum.PENDING.getId().equals(result.getIdStatus()))
                 .verifyComplete();
+
+        verify(fundApplicationRepository).save(any(FundApplication.class));
     }
 
+
     @Test
-    void saveFundApplication_MismatchUserEmail_ThrowsFundException() {
+    void saveFundApplication_tokenUserMismatch() {
+        FundApplication fundApplication = FundApplication.builder()
+                .email("other@email.com")
+                .build();
 
-        String wrongEmail = "wrong@crediya.com";
-
-        StepVerifier.create(fundApplicationUseCase.saveFundApplication(fundApplication, wrongEmail))
-                .expectErrorMatches(throwable ->
-                        throwable instanceof FundException &&
-                                ((FundException) throwable).getError().equals(FundErrorEnum.TOKEN_USER_MISMATCH))
+        StepVerifier.create(fundApplicationUseCase.saveFundApplication(fundApplication, "test@email.com"))
+                .expectErrorMatches(error ->
+                        error instanceof FundException
+                                && ((FundException) error).getError() == FundErrorEnum.TOKEN_USER_MISMATCH)
                 .verify();
     }
 
     @Test
-    void saveFundApplication_LoanTypeNotFound_ThrowsFundException() {
+    void saveFundApplication_loanTypeNotFound() {
+        FundApplication fundApplication = FundApplication.builder()
+                .email("test@email.com")
+                .loanType("UNKNOWN")
+                .amount(BigDecimal.valueOf(2000))
+                .documentIdentification("123456")
+                .build();
 
-        when(loanTypeRepository.findByName(anyString())).thenReturn(Mono.empty());
+        when(loanTypeRepository.findByName("UNKNOWN")).thenReturn(Mono.empty());
 
-        StepVerifier.create(fundApplicationUseCase.saveFundApplication(fundApplication, userEmail))
-                .expectErrorMatches(throwable ->
-                        throwable instanceof FundException &&
-                                ((FundException) throwable).getError().equals(FundErrorEnum.LOAN_TYPE_ID_NOT_FOUND))
+        StepVerifier.create(fundApplicationUseCase.saveFundApplication(fundApplication, "test@email.com"))
+                .expectErrorMatches(error ->
+                        error instanceof FundException
+                                && ((FundException) error).getError() == FundErrorEnum.LOAN_TYPE_ID_NOT_FOUND)
                 .verify();
     }
 
     @Test
-    void saveFundApplication_LoanAmountOutOfRange_ThrowsFundException() {
+    void saveFundApplication_amountOutOfRange() {
+        FundApplication fundApplication = FundApplication.builder()
+                .email("test@email.com")
+                .loanType("PERSONAL")
+                .amount(BigDecimal.valueOf(50000))
+                .documentIdentification("123456")
+                .build();
 
-        FundApplication outOfRangeApplication = fundApplication.toBuilder().amount(BigDecimal.valueOf(3000000)).build();
-        when(loanTypeRepository.findByName(anyString())).thenReturn(Mono.just(loanType));
+        LoanType loanType = LoanType.builder()
+                .id(UUID.randomUUID())
+                .name("PERSONAL")
+                .minAmount(BigDecimal.valueOf(1000))
+                .maxAmount(BigDecimal.valueOf(10000))
+                .build();
 
-        StepVerifier.create(fundApplicationUseCase.saveFundApplication(outOfRangeApplication, userEmail))
-                .expectErrorMatches(throwable ->
-                        throwable instanceof FundException &&
-                                ((FundException) throwable).getError().equals(FundErrorEnum.LOAN_AMOUNT_OUT_OF_RANGE))
+        when(loanTypeRepository.findByName("PERSONAL")).thenReturn(Mono.just(loanType));
+
+        StepVerifier.create(fundApplicationUseCase.saveFundApplication(fundApplication, "test@email.com"))
+                .expectErrorMatches(error ->
+                        error instanceof FundException
+                                && ((FundException) error).getError() == FundErrorEnum.LOAN_AMOUNT_OUT_OF_RANGE)
                 .verify();
     }
 
     @Test
-    void saveFundApplication_UserNotFoundByDocument_ThrowsFundException() {
+    void saveFundApplication_documentIdentificationNotFound() {
+        FundApplication fundApplication = FundApplication.builder()
+                .email("test@email.com")
+                .loanType("PERSONAL")
+                .amount(BigDecimal.valueOf(2000))
+                .documentIdentification("123456")
+                .build();
 
-        when(loanTypeRepository.findByName(anyString())).thenReturn(Mono.just(loanType));
-        when(userRestService.findUserByDocumentNumber( anyString())).thenReturn(Mono.empty());
+        LoanType loanType = LoanType.builder()
+                .id(UUID.randomUUID())
+                .name("PERSONAL")
+                .minAmount(BigDecimal.valueOf(1000))
+                .maxAmount(BigDecimal.valueOf(10000))
+                .build();
 
-        StepVerifier.create(fundApplicationUseCase.saveFundApplication(fundApplication, userEmail))
-                .expectErrorMatches(throwable ->
-                        throwable instanceof FundException &&
-                                ((FundException) throwable).getError().equals(FundErrorEnum.DOCUMENT_IDENTIFICATION_NOT_FOUND))
+        when(loanTypeRepository.findByName("PERSONAL")).thenReturn(Mono.just(loanType));
+        when(userRestService.findUserByDocumentNumber("123456")).thenReturn(Mono.empty());
+
+        StepVerifier.create(fundApplicationUseCase.saveFundApplication(fundApplication, "test@email.com"))
+                .expectErrorMatches(error ->
+                        error instanceof FundException
+                                && ((FundException) error).getError() == FundErrorEnum.DOCUMENT_IDENTIFICATION_NOT_FOUND)
                 .verify();
     }
 }

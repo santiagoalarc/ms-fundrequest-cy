@@ -22,7 +22,7 @@ public class FundEntity {
     private Long term;
     private String email;
     @Column("id_status")
-    private UUID statusId;
+    private UUID idStatus;
     @Column("id_loan_type")
     private UUID idLoanType;
 }

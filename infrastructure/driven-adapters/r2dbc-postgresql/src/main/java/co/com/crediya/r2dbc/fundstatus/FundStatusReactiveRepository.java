@@ -1,6 +1,5 @@
 package co.com.crediya.r2dbc.fundstatus;
 
-import co.com.crediya.model.fundstatus.FundStatus;
 import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Mono;

@@ -9,6 +9,8 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 
 public interface FundReactiveRepository extends ReactiveCrudRepository<FundEntity, String>, ReactiveQueryByExampleExecutor<FundEntity> {
 
@@ -37,5 +39,7 @@ public interface FundReactiveRepository extends ReactiveCrudRepository<FundEntit
             @Param("status") String status,
             @Param("loanType") String loanType
     );
+
+    Flux<FundEntity> findAllByEmailIn(List<String> emails);
 
 }

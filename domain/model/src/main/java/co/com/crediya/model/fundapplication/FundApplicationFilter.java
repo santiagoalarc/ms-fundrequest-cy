@@ -11,19 +11,9 @@ import lombok.NoArgsConstructor;
 @Builder(toBuilder = true)
 public class FundApplicationFilter {
     private String email;
-    private String status;
-    private String loanType;
-
-    public boolean hasEmail() {
-        return email != null && !email.trim().isEmpty();
-    }
-
-    public boolean hasStatus() {
-        return status != null && !status.trim().isEmpty();
-    }
-
-    public boolean hasLoanType() {
-        return loanType != null && !loanType.trim().isEmpty();
-    }
+    private String status = "";
+    private String statusId = "";
+    private String loanType = "";
+    private String loanTypeId = "";
 
 }
