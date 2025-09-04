@@ -64,7 +64,7 @@ public class RestConsumer implements UserRestService {
                 .onStatus(
                         HttpStatus.INTERNAL_SERVER_ERROR::equals,
                         response -> response.bodyToMono(String.class).map(Exception::new))
-                .bodyToFlux(UserResponseDto.class)//TODO ojo tal vez sea un mono en vez de un flux
+                .bodyToFlux(UserResponseDto.class)
                 .retry(retry)
                 .map(response -> mapper.convertValue(response, User.class))
                 .onErrorResume(error -> Mono.error(new FundException(FundErrorEnum.DOCUMENT_IDENTIFICATION_NOT_FOUND))); //TODO modificar el error
