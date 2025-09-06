@@ -7,6 +7,7 @@ import co.com.crediya.model.common.PagedResult;
 import co.com.crediya.model.fundapplication.FundAppCustomer;
 import co.com.crediya.model.fundapplication.FundApplication;
 import co.com.crediya.model.fundapplication.FundApplicationFilter;
+import co.com.crediya.model.fundapplication.QueryFundApplication;
 import co.com.crediya.model.fundapplication.gateways.FundApplicationRepository;
 import co.com.crediya.model.fundstatus.FundStatus;
 import co.com.crediya.model.fundstatus.gateways.FundStatusRepository;
@@ -34,105 +35,77 @@ public class FundApplicationListUseCase {
     private final UserRestService userRestService;
     private final LoanTypeRepository loanTypeRepository;
 
-    private final static String EMPTY = "";
-
-
     private final Logger log = Logger.getLogger(FundApplicationListUseCase.class.getName());
 
     public Mono<PagedResult<FundAppCustomer>> findFundApplicationList(FundApplicationFilter fundApFilter, PageRequestModel pageRequestModel) {
         log.info("Finding fund applications with filters" + fundApFilter.toString());
 
-        return createFundAppFilterData(fundApFilter)
+        return Mono.just(fundApFilter)
                 .flatMap(fundApplicationFilter -> fundApplicationRepository.findPagedByFilter(fundApplicationFilter, pageRequestModel)
-                        .flatMap(this::mapFundWithLoanType)
-                        .flatMap(this::mapFundWithFundStatus)
-                        .flatMap(this::mapFundWithUserInfo)
+                        .flatMap(this::mapFundWithStatusAndLoanTypeAndUser)
                         .flatMap(this::mapFundWithTotalAmountApproved)
                 )
                 .doOnNext(result -> log.info("Found fund applications" + result.getTotalElements()))
                 .doOnError(error -> log.info("Error finding fund applications" + error));
     }
 
-    private Mono<FundApplicationFilter> createFundAppFilterData(FundApplicationFilter fundApFilter) {
-        return Mono.just(fundApFilter)
-                .filter(fundApFilterData -> !EMPTY.equals(fundApFilter.getStatus()))
-                .flatMap(fundApplicationFilter -> fundStatusRepository.findByName(fundApFilter.getStatus())
-                        .switchIfEmpty(Mono.defer(() -> Mono.error(new FundException(FundErrorEnum.FUND_STATUS_INVALID)))))
-                .map(fundStatus -> fundApFilter.toBuilder()
-                        .statusId(fundStatus.getId().toString())
-                        .build())
-                .switchIfEmpty(Mono.defer(() -> Mono.just(fundApFilter)))
-                .flatMap(fundApplicationFilter -> Mono.just(fundApplicationFilter)
-                        .filter(fundApFilterData -> !EMPTY.equals(fundApFilter.getLoanType()))
-                        .flatMap(fundApFilterData -> loanTypeRepository.findByName(fundApFilter.getLoanType())
-                                .switchIfEmpty(Mono.defer(() -> Mono.error(new FundException(FundErrorEnum.LOAN_TYPE_INVALID)))))
-                        .map(loanType -> fundApplicationFilter.toBuilder()
-                                .loanTypeId(loanType.getId().toString())
-                                .build())
-                        .switchIfEmpty(Mono.defer(() -> Mono.just(fundApplicationFilter)))
-                );
-    }
+    private Mono<PagedResult<FundAppCustomer>> mapFundWithStatusAndLoanTypeAndUser(PagedResult<FundAppCustomer> fundAppPage) {
 
-    private Mono<PagedResult<FundAppCustomer>> mapFundWithLoanType(PagedResult<FundAppCustomer> fundAppPage) {
-        if (fundAppPage.getContent().isEmpty()) {
-            return Mono.just(fundAppPage);
-        }
-        return loanTypeRepository.findAll()
-                .collectMap(LoanType::getId)
-                .flatMap(loanTypeMap -> Flux.fromIterable(fundAppPage.getContent())
-                        .map(fundApplication -> {
-                            LoanType loanType = loanTypeMap.get(fundApplication.getIdLoanType());
-                            if (loanType != null) {
-                                fundApplication.setLoanType(loanType.getName());
-                                fundApplication.setInterestRateTaa(loanType.getInterestRateTaa());
-                            }
-                            return fundApplication;
-                        })
-                        .collectList()
-                        .map(enrichedList -> fundAppPage.toBuilder().content(enrichedList).build())
-                );
-    }
+        QueryFundApplication queryFundApplication = QueryFundApplication.builder().build();
 
-    private Mono<PagedResult<FundAppCustomer>> mapFundWithUserInfo(PagedResult<FundAppCustomer> fundAppPage) {
-        if (fundAppPage.getContent().isEmpty()) {
-            return Mono.just(fundAppPage);
-        }
         List<String> emails = fundAppPage.getContent().stream()
                 .map(FundApplication::getEmail)
                 .collect(Collectors.toList());
 
-        return userRestService.findUsersByEmail(emails)
-                .distinct()
-                .collectMap(User::getEmail)
-                .flatMap(userInfoMap -> Flux.fromIterable(fundAppPage.getContent())
-                        .map(fundApp -> {
-                            User user = userInfoMap.get(fundApp.getEmail());
-                            if (user != null) {
-                                fundApp.setName(user.getName().concat(" ").concat(user.getLastName()));
-                                fundApp.setBaseSalary(user.getBaseSalary());
-                            }
-                            return fundApp;
-                        })
-                        .collectList()
-                        .map(enrichedList -> fundAppPage.toBuilder().content(enrichedList).build()));
-    }
-
-    private Mono<PagedResult<FundAppCustomer>> mapFundWithFundStatus(PagedResult<FundAppCustomer> fundAppPage) {
-        if (fundAppPage.getContent().isEmpty()) {
-            return Mono.just(fundAppPage);
-        }
-        return fundStatusRepository.findAll()
-                .collectMap(FundStatus::getId)
-                .flatMap(fundStatusMap -> Flux.fromIterable(fundAppPage.getContent())
-                        .map(fundApplication -> {
-                            FundStatus fundStatus = fundStatusMap.get(fundApplication.getIdStatus());
-                            if (fundStatus != null) {
-                                fundApplication.setStatus(fundStatus.getName());
-                            }
-                            return fundApplication;
-                        })
+        return Mono.just(fundAppPage)
+                .filter(pagedFundApp -> !fundAppPage.getContent().isEmpty())
+                .flatMap(pagedFundApp -> buildQueryFundApp(queryFundApplication, emails))
+                .flatMap(queryFundApp -> Flux.fromIterable(fundAppPage.getContent())
+                        .map(fundAppCustomer -> Optional.ofNullable(queryFundApp.getFundStatusMap()
+                                        .get(fundAppCustomer.getIdStatus()))
+                                .map(fundStatus -> {
+                                    fundAppCustomer.setStatus(fundStatus.getName());
+                                    return fundAppCustomer;
+                                })
+                                .orElse(fundAppCustomer))
+                        .map(fundAppCustomer -> Optional.ofNullable(queryFundApp.getLoanTypeMap()
+                                        .get(fundAppCustomer.getIdLoanType()))
+                                .map(loanType -> {
+                                    fundAppCustomer.setLoanType(loanType.getName());
+                                    fundAppCustomer.setInterestRateTaa(loanType.getInterestRateTaa());
+                                    return fundAppCustomer;
+                                })
+                                .orElse(fundAppCustomer))
+                        .map(fundAppCustomer -> Optional.ofNullable(queryFundApp.getUserMap()
+                                        .get(fundAppCustomer.getEmail()))
+                                .map(user -> {
+                                    fundAppCustomer.setName(user.getName().concat(" ").concat(user.getLastName()));
+                                    fundAppCustomer.setEmail(user.getEmail());
+                                    fundAppCustomer.setBaseSalary(user.getBaseSalary());
+                                    return fundAppCustomer;
+                                })
+                                .orElse(fundAppCustomer)
+                        )
                         .collectList()
                         .map(enrichedList -> fundAppPage.toBuilder().content(enrichedList).build())
+
+                )
+                .switchIfEmpty(Mono.defer(() -> Mono.just(fundAppPage)));
+    }
+
+    private Mono<QueryFundApplication> buildQueryFundApp(QueryFundApplication queryFundApplication, List<String> emails) {
+        return fundStatusRepository.findAll()
+                .collectMap(FundStatus::getId)
+                .map(fundStatusMap -> queryFundApplication.toBuilder()
+                        .fundStatusMap(fundStatusMap)
+                        .build())
+                .flatMap(queryFundApp -> loanTypeRepository.findAll()
+                        .collectMap(LoanType::getId)
+                        .map(loanTypeMap -> queryFundApp.toBuilder().loanTypeMap(loanTypeMap).build()))
+                .flatMap(queryFundApp -> userRestService.findUsersByEmail(emails)
+                        .distinct()
+                        .collectMap(User::getEmail)
+                        .map(userMap -> queryFundApp.toBuilder().userMap(userMap).build())
                 );
     }
 

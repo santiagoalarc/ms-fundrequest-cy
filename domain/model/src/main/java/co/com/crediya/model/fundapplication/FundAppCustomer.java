@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @Getter
 @Setter
-public class FundAppCustomer  extends  FundApplication{
+public class FundAppCustomer  extends  FundApplication {
 
     private String name;
     private String baseSalary;

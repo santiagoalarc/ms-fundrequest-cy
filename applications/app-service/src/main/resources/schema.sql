@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS fund_application (
 );
 
 CREATE TABLE IF NOT EXISTS fund_status (
-     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+     id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid(),
      name VARCHAR(255),
      description VARCHAR(255),
      creation_date BIGINT
@@ -23,7 +23,7 @@ INSERT INTO fund_status (id, name, description, creation_date) VALUES
 ('8cfdf88a-05a6-461d-b0f1-3116df15f3b5', 'ON_HOLD','On Hold', EXTRACT(EPOCH FROM NOW()) * 1000) ON CONFLICT (id) DO NOTHING;;
 
 CREATE TABLE IF NOT EXISTS loan_type(
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255),
     creation_date BIGINT,
     max_amount DECIMAL(18, 2),

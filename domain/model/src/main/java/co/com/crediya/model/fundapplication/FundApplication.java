@@ -1,8 +1,8 @@
 package co.com.crediya.model.fundapplication;
+
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 
 @AllArgsConstructor
@@ -16,7 +16,7 @@ public class FundApplication {
     private BigDecimal amount;
     private Long term;
     private String email;
-    private UUID idStatus;
-    private UUID idLoanType;
+    private String idStatus;
+    private String idLoanType;
     private String loanType;
 }

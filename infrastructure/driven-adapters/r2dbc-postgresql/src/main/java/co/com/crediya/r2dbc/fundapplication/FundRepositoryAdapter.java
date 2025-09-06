@@ -44,7 +44,7 @@ public class FundRepositoryAdapter extends ReactiveAdapterOperations<
     @Override
     public Mono<PagedResult<FundAppCustomer>> findPagedByFilter(FundApplicationFilter filter, PageRequestModel pageRequest) {
         Pageable pageable = PageRequest.of(pageRequest.getPage() - 1, pageRequest.getSize());
-        return repository.findAllByEmailAndStatusAndLoanType(filter.getEmail(), filter.getStatusId(), filter.getLoanTypeId(), pageable)
+        return repository.findAllByEmailAndStatusAndLoanType(filter.getEmail(), filter.getStatus(), filter.getLoanType(), pageable)
                 .collectList()
                 .zipWith(this.repository.countByFilters(filter.getEmail(), filter.getStatusId(), filter.getLoanTypeId()))
                 .map(tupleFund -> PagedResult.<FundAppCustomer>builder()

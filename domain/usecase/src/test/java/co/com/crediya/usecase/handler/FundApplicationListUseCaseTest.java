@@ -78,8 +78,8 @@ class FundApplicationListUseCaseTest {
         fundAppCustomer = new FundAppCustomer();
         fundAppCustomer.setEmail("test@example.com");
         fundAppCustomer.setAmount(BigDecimal.valueOf(10000));
-        fundAppCustomer.setIdStatus(UUID.randomUUID());
-        fundAppCustomer.setIdLoanType(UUID.randomUUID());
+        fundAppCustomer.setIdStatus(UUID.randomUUID().toString());
+        fundAppCustomer.setIdLoanType(UUID.randomUUID().toString());
 
         pagedResult = PagedResult.<FundAppCustomer>builder()
                 .content(Collections.singletonList(fundAppCustomer))
@@ -108,9 +108,7 @@ class FundApplicationListUseCaseTest {
     @Test
     void findFundApplicationList_WithStatusFilter_ShouldValidateAndApplyFilter() {
         filter.setStatus("PENDING");
-        FundStatus fundStatus = createFundStatus("PENDING");
 
-        when(fundStatusRepository.findByName("PENDING")).thenReturn(Mono.just(fundStatus));
         when(fundApplicationRepository.findPagedByFilter(any(FundApplicationFilter.class), any(PageRequestModel.class)))
                 .thenReturn(Mono.just(pagedResult));
         when(loanTypeRepository.findAll()).thenReturn(Flux.empty());
@@ -122,26 +120,12 @@ class FundApplicationListUseCaseTest {
         StepVerifier.create(useCase.findFundApplicationList(filter, pageRequest))
                 .expectNextMatches(result -> result.getTotalElements() == 1)
                 .verifyComplete();
-    }
-
-    @Test
-    void findFundApplicationList_WithInvalidStatus_ShouldThrowException() {
-        filter.setStatus("INVALID_STATUS");
-
-        when(fundStatusRepository.findByName("INVALID_STATUS")).thenReturn(Mono.empty());
-
-        StepVerifier.create(useCase.findFundApplicationList(filter, pageRequest))
-                .expectErrorMatches(throwable -> throwable instanceof FundException &&
-                        ((FundException) throwable).getError() == FundErrorEnum.FUND_STATUS_INVALID)
-                .verify();
     }
 
     @Test
     void findFundApplicationList_WithLoanTypeFilter_ShouldValidateAndApplyFilter() {
         filter.setLoanType("PERSONAL");
-        LoanType loanType = createLoanType();
 
-        when(loanTypeRepository.findByName("PERSONAL")).thenReturn(Mono.just(loanType));
         when(fundApplicationRepository.findPagedByFilter(any(FundApplicationFilter.class), any(PageRequestModel.class)))
                 .thenReturn(Mono.just(pagedResult));
         when(loanTypeRepository.findAll()).thenReturn(Flux.empty());
@@ -153,18 +137,6 @@ class FundApplicationListUseCaseTest {
         StepVerifier.create(useCase.findFundApplicationList(filter, pageRequest))
                 .expectNextMatches(result -> result.getTotalElements() == 1)
                 .verifyComplete();
-    }
-
-    @Test
-    void findFundApplicationList_WithInvalidLoanType_ShouldThrowException() {
-        filter.setLoanType("INVALID_LOAN_TYPE");
-
-        when(loanTypeRepository.findByName("INVALID_LOAN_TYPE")).thenReturn(Mono.empty());
-
-        StepVerifier.create(useCase.findFundApplicationList(filter, pageRequest))
-                .expectErrorMatches(throwable -> throwable instanceof FundException &&
-                        ((FundException) throwable).getError() == FundErrorEnum.LOAN_TYPE_INVALID)
-                .verify();
     }
 
     @Test
@@ -310,7 +282,7 @@ class FundApplicationListUseCaseTest {
 
     private FundStatus createFundStatus(String name) {
         return FundStatus.builder()
-                .id(UUID.randomUUID())
+                .id(UUID.randomUUID().toString())
                 .name(name)
                 .description(name + " status")
                 .creationDate("2024-01-01")
@@ -319,7 +291,7 @@ class FundApplicationListUseCaseTest {
 
     private LoanType createLoanType() {
         return LoanType.builder()
-                .id(UUID.randomUUID())
+                .id(UUID.randomUUID().toString())
                 .name("PERSONAL")
                 .interestRateTaa(BigDecimal.valueOf(15.5))
                 .build();
@@ -336,12 +308,12 @@ class FundApplicationListUseCaseTest {
                 .build();
     }
 
-    private FundApplication createFundApplication(BigDecimal amount, UUID statusId) {
+    private FundApplication createFundApplication(BigDecimal amount, String statusId) {
         return FundApplication.builder()
                 .email("test@example.com")
                 .amount(amount)
                 .idStatus(statusId)
-                .idLoanType(UUID.randomUUID())
+                .idLoanType(UUID.randomUUID().toString())
                 .term(12L)
                 .documentIdentification("12345678")
                 .build();

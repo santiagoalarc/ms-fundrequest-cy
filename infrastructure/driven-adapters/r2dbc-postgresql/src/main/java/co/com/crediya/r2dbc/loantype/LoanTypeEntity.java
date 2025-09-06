@@ -9,7 +9,6 @@ import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 @Data
 @AllArgsConstructor
@@ -19,7 +18,7 @@ import java.util.UUID;
 public class LoanTypeEntity {
 
     @Id
-    private UUID id;
+    private String id;
     private String name;
     @Column("creation_date")
     private Long creationDate;

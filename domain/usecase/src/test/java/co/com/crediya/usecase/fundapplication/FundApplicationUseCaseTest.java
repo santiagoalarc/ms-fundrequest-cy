@@ -63,7 +63,7 @@ class FundApplicationUseCaseTest {
                 .build();
 
         loanType = LoanType.builder()
-                .id(UUID.randomUUID())
+                .id(UUID.randomUUID().toString())
                 .name("PERSONAL")
                 .minAmount(new BigDecimal("1000"))
                 .maxAmount(new BigDecimal("10000"))

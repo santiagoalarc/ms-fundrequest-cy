@@ -15,10 +15,12 @@ import java.util.List;
 public interface FundReactiveRepository extends ReactiveCrudRepository<FundEntity, String>, ReactiveQueryByExampleExecutor<FundEntity> {
 
     @Query("""
-        SELECT * FROM fund_application
-        WHERE (:email IS NULL OR COALESCE(:email, '') = '' OR email = :email)
-        AND (:status IS NULL OR COALESCE(:status, '') = '' OR id_status = :status)
-        AND (:loanType IS NULL OR COALESCE(:loanType, '') = '' OR id_loan_type = :loanType)
+       SELECT fa.* FROM fund_application fa
+       INNER JOIN fund_status fs2 on fa.id_status = fs2.id
+       INNER JOIN loan_type lt on lt.id = fa.id_loan_type
+       WHERE (:email IS NULL OR COALESCE(:email, '') = '' OR email = :email)
+       AND (:status IS NULL OR COALESCE(:status, '') = '' OR fs2."name"  = :status)
+       AND (:loanType IS NULL OR COALESCE(:loanType, '') = '' OR lt."name"  = :loanType)
         LIMIT :#{#pageable.pageSize} OFFSET :#{#pageable.offset}
         """)
     Flux<FundEntity> findAllByEmailAndStatusAndLoanType(
@@ -29,10 +31,12 @@ public interface FundReactiveRepository extends ReactiveCrudRepository<FundEntit
     );
 
     @Query("""
-    SELECT COUNT(*) FROM fund_application
+    SELECT COUNT(fa.*) FROM fund_application fa
+    INNER JOIN fund_status fs2 on fa.id_status = fs2.id
+    INNER JOIN loan_type lt on lt.id = fa.id_loan_type
     WHERE (:email IS NULL OR COALESCE(:email, '') = '' OR email = :email)
-    AND (:status IS NULL OR COALESCE(:status, '') = '' OR id_status = :status)
-    AND (:loanType IS NULL OR COALESCE(:loanType, '') = '' OR id_loan_type = :loanType)
+    AND (:status IS NULL OR COALESCE(:status, '') = '' OR fs2."name"  = :status)
+    AND (:loanType IS NULL OR COALESCE(:loanType, '') = '' OR lt."name"  = :loanType)
     """)
     Mono<Long> countByFilters(
             @Param("email") String email,

@@ -6,7 +6,6 @@ import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 @Table("fund_application")
 @AllArgsConstructor
@@ -22,7 +21,7 @@ public class FundEntity {
     private Long term;
     private String email;
     @Column("id_status")
-    private UUID idStatus;
+    private String idStatus;
     @Column("id_loan_type")
-    private UUID idLoanType;
+    private String idLoanType;
 }

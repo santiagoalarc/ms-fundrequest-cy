@@ -4,8 +4,6 @@ import lombok.*;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.util.UUID;
-
 @Table("fund_status")
 @AllArgsConstructor
 @NoArgsConstructor
@@ -14,7 +12,7 @@ import java.util.UUID;
 @Builder
 public class FundStatusEntity {
 
-    private UUID id;
+    private String id;
     private String name;
     private String description;
     @Column("creation_date")
