@@ -67,7 +67,7 @@ public class RestConsumer implements UserRestService {
                 .bodyToFlux(UserResponseDto.class)
                 .retry(retry)
                 .map(response -> mapper.convertValue(response, User.class))
-                .onErrorResume(error -> Mono.error(new FundException(FundErrorEnum.DOCUMENT_IDENTIFICATION_NOT_FOUND))); //TODO modificar el error
+                .onErrorResume(error -> Mono.error(new FundException(FundErrorEnum.DOCUMENT_IDENTIFICATION_NOT_FOUND)));
 
     }
 }
