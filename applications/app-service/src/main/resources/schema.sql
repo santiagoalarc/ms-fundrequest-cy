@@ -1,12 +1,3 @@
-CREATE TABLE IF NOT EXISTS fund_application (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    amount VARCHAR(255),
-    term BIGINT,
-    email VARCHAR(255),
-    id_status VARCHAR(255),
-    id_loan_type VARCHAR(255)
-);
-
 CREATE TABLE IF NOT EXISTS fund_status (
      id VARCHAR(255) PRIMARY KEY DEFAULT gen_random_uuid(),
      name VARCHAR(255),
@@ -35,4 +26,15 @@ CREATE TABLE IF NOT EXISTS loan_type(
 INSERT INTO loan_type (id, name, creation_date, max_amount, min_amount, interest_rate_taa, auto_validation) VALUES
 ('6e0c1f5a-3d2b-4f81-a7b2-10f8a846f332', 'PERSONAL_LOAN', EXTRACT(EPOCH FROM NOW()) * 1000, 50000.00, 100.00, 12.50, TRUE),
 ('9d4f23b1-5a2c-490b-9c71-2b0b5d53c8f4', 'MORTGAGE_LOAN', EXTRACT(EPOCH FROM NOW()) * 1000, 500000.00, 50000.00, 3.75, FALSE),
-('3a8e9c7d-4b5f-4a6c-8e9d-1b2c3d4e5f60', 'STUDENT_LOAN', EXTRACT(EPOCH FROM NOW()) * 1000, 25000.00, 500.00, 5.00, TRUE) ON CONFLICT (id) DO NOTHING;;
+('3a8e9c7d-4b5f-4a6c-8e9d-1b2c3d4e5f60', 'STUDENT_LOAN', EXTRACT(EPOCH FROM NOW()) * 1000, 25000.00, 500.00, 5.00, TRUE) ON CONFLICT (id) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS fund_application (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    amount VARCHAR(255),
+    term BIGINT,
+    email VARCHAR(255),
+    id_status VARCHAR(255),
+    id_loan_type VARCHAR(255),
+    FOREIGN KEY (id_status) REFERENCES fund_status(id),
+    FOREIGN KEY (id_loan_type) REFERENCES loan_type(id)
+);

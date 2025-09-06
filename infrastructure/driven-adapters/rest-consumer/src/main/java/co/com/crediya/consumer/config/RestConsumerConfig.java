@@ -27,6 +27,13 @@ public class RestConsumerConfig {
     public WebClient webClientUser(WebClient.Builder builder,
                                          @Value("${adapter.restconsumer.user.host}") String host,
                                          @Value("${adapter.restconsumer.timeout}") int timeout) {
+
+        System.out.println("AUTH HOST CONFIGURED: " + host);
+
+        if (host == null || host.trim().isEmpty()) {
+            throw new IllegalArgumentException("AUTH_API_URL cannot be null or empty");
+        }
+
         return builder
                 .baseUrl(host)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
