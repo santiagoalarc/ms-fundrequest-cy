@@ -1,5 +1,5 @@
 server:
-  port: ${PORT:80}
+  port: ${PORT:8080}
 spring:
   application:
     name: "MsFundRequest"
@@ -47,7 +47,7 @@ routes:
 adapters:
   r2dbc:
     host: ${SPRING_DATASOURCE_HOST}
-    port: 5432
+    port: ${SPRING_DATASOURCE_PORT}
     database: ${SPRING_DATASOURCE_DATABASE}
     schema: "public"
     username: ${SPRING_DATASOURCE_USERNAME}
@@ -58,7 +58,7 @@ adapter:
     timeout: 5000
     retry: 2
     user:
-      host: "http://localhost:8080"
+      host: ${AUTH_API_URL}
       url: "/api/v1/usuario/"
       url-users-email: "/api/v1/usuarios-by-email"
 resilience4j:
