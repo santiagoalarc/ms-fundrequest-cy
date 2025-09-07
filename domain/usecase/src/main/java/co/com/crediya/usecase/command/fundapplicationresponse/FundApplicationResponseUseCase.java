@@ -4,16 +4,21 @@ import co.com.crediya.enums.FundErrorEnum;
 import co.com.crediya.enums.FundStatusEnum;
 import co.com.crediya.exceptions.FundException;
 import co.com.crediya.model.fundapplication.FundApplication;
+import co.com.crediya.model.fundapplication.gateways.FundApplicationNotificationGateway;
 import co.com.crediya.model.fundapplication.gateways.FundApplicationRepository;
+import co.com.crediya.model.user.gateways.UserRestService;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 @RequiredArgsConstructor
 public class FundApplicationResponseUseCase {
 
     private final FundApplicationRepository fundApplicationRepository;
+    private final FundApplicationNotificationGateway notificationGateway;
+    private final UserRestService userRestService;
 
     private final Logger log = Logger.getLogger(FundApplicationResponseUseCase.class.getName());
 
@@ -30,6 +35,15 @@ public class FundApplicationResponseUseCase {
                                 .idStatus(statusId)
                                 .build()))
                 .flatMap(fundApplicationRepository::save)
+                .flatMap(fundData -> Mono.just(fundData)
+                        .flatMap(fundDataInfo -> userRestService.findUsersByEmail(List.of(fundDataInfo.getEmail())).next())
+                        .switchIfEmpty(Mono.defer(() -> Mono.error(new FundException(FundErrorEnum.EMAIL_NOT_FOUND))))
+                        .map(user -> user.getName().concat(" ").concat(user.getLastName()))
+                        .flatMap(userName -> notificationGateway.notifyStatusChange(fundData.getEmail(),
+                                "ACTUALIZACIÓN DE ESTADO DE SOLICITUD DE PRÉSTAMO",
+                                userName,
+                                fundApplication.getStatus()))
+                )
                 .thenReturn(fundApplication)
                 .doOnSuccess(fundUpdated -> log.info("UPDATE FUND APPLICATION SUCCESSFUL :: " + fundUpdated));
     }
