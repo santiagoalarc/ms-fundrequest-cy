@@ -37,18 +37,18 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
+                                "/api-docs/**",
                                 "/webjars/**",
-                                "/swagger-resources/**"
+                                "/swagger-resources/**",
+                                "/favicon.ico"
                         ).permitAll()
                         .pathMatchers(
                                 "/h2-console/**",
                                 "/auth/login",
-                                "/health/**",
-                                "/api/v1/login"
+                                "/favicon.ico",
+                                "/health/**"
                         ).permitAll()
-                        .pathMatchers("/code/request").permitAll()
-                        .pathMatchers("/user/create").authenticated()
-                        .pathMatchers("/account/{account_id}/balance").authenticated()
+                        .pathMatchers("/favicon.ico", "/css/**", "/js/**").permitAll()
                         .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyExchange().authenticated()
                 )

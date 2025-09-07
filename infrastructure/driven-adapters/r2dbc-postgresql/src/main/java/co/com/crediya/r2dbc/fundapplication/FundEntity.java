@@ -21,7 +21,7 @@ public class FundEntity {
     private Long term;
     private String email;
     @Column("id_status")
-    private String statusId;
+    private String idStatus;
     @Column("id_loan_type")
     private String idLoanType;
 }

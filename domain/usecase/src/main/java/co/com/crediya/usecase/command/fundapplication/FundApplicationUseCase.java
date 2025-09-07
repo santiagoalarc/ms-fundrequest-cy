@@ -21,30 +21,32 @@ public class FundApplicationUseCase {
     private final UserRestService userRestService;
     private final Logger log = Logger.getLogger(FundApplicationUseCase.class.getName());
 
-    public Mono<FundApplication> saveFundApplication(FundApplication fundApplication, String token, String email){
+    public Mono<FundApplication> saveFundApplication(FundApplication fundApplication, String email){
 
         log.log(Level.INFO,"ENTER TO CREATE FUND APPLICATION - {}", fundApplication);
 
         return Mono.justOrEmpty(fundApplication)
                 .filter(fundApp -> email.equals(fundApp.getEmail()))
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new FundException(FundErrorEnum.TOKEN_USER_MISMATCH))))
-                .flatMap(fundApp -> loanTypeRepository.findById(fundApp.getIdLoanType())
+                .flatMap(fundApp -> loanTypeRepository.findByName(fundApp.getLoanType())
                         .switchIfEmpty(Mono.defer(() -> Mono.error(new FundException(FundErrorEnum.LOAN_TYPE_ID_NOT_FOUND))))
                         .filter(loanType -> loanType.getMaxAmount().compareTo(fundApp.getAmount()) >= 0
                                 && loanType.getMinAmount().compareTo(fundApp.getAmount()) <= 0)
                         .switchIfEmpty(Mono.defer(() -> Mono.error(new FundException(FundErrorEnum.LOAN_AMOUNT_OUT_OF_RANGE))))
-                        .thenReturn(fundApp)
+                        .map(loanType -> fundApp.toBuilder()
+                                .idLoanType(loanType.getId())
+                                .build())
                 )
                 .flatMap(fundApp -> Mono.just(fundApp)
-                        .flatMap(fund -> userRestService.findUserByDocumentNumber(fund.getDocumentIdentification(), token))
+                        .flatMap(fund -> userRestService.findUserByDocumentNumber(fund.getDocumentIdentification()))
                         .switchIfEmpty(Mono.defer(() -> Mono.error(new FundException(FundErrorEnum.DOCUMENT_IDENTIFICATION_NOT_FOUND))))
                         .thenReturn(fundApp)
                 )
                 .map(fundReq -> fundReq.toBuilder()
-                        .statusId(FundStatusEnum.PENDING.getId())
+                        .idStatus(FundStatusEnum.PENDING.getId())
                         .build())
                 .flatMap(fundApplicationRepository::save)
                 .doOnError(err -> log.info("ERROR IN CREATE FUND APPLICATION " + err.getMessage()))
-                .doOnSuccess(userCreated -> log.info("CREATE FUND APPLICATION SUCCESSFUL :: id- " + userCreated.getId()));
+                .doOnSuccess(userCreated -> log.info("CREATE FUND APPLICATION SUCCESSFUL :: " + userCreated));
     }
 }

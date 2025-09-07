@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 import java.math.BigDecimal;
 
 public record CreateFundApplication(
-        String id,
         @NotBlank(message = "NAME_CANNOT_BE_EMPTY_OR_NULL")
         String documentIdentification,
         BigDecimal amount,
@@ -14,5 +13,5 @@ public record CreateFundApplication(
         @NotBlank(message = "EMAIL_CANNOT_BE_EMPTY_OR_NULL")
         @Email(message = "EMAIL_IS_NOT_VALID")
         String email,
-        String idLoanType) {
+        String loanType) {
 }

@@ -26,14 +26,15 @@ public class JwtAuthenticationManager implements ReactiveAuthenticationManager {
 
     @Override
     public Mono<Authentication> authenticate(Authentication authentication) {
+        String token =  authentication.getCredentials().toString();
         return Mono.just(authentication)
-                .map(auth -> jwtProvider.getClaims(auth.getCredentials().toString()))
+                .map(auth -> jwtProvider.getClaims(token))
                 .log()
                 .onErrorResume(e -> Mono.error(new FundException(FundErrorEnum.INVALID_TOKEN)))
-                .map(this::createAuthenticationToken);
+                .map(claims -> createAuthenticationToken(claims, token));
     }
 
-    private UsernamePasswordAuthenticationToken createAuthenticationToken(Claims claims) {
+    private UsernamePasswordAuthenticationToken createAuthenticationToken(Claims claims, String token) {
         String username = claims.getSubject();
         List<String> roles = claims.containsKey("roles")
                 ?(List<String>) claims.get("roles")
@@ -45,7 +46,7 @@ public class JwtAuthenticationManager implements ReactiveAuthenticationManager {
 
         User principal = new User(username, "", authorities);
 
-        return new UsernamePasswordAuthenticationToken(principal, null, authorities);
+        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
 
     }
 

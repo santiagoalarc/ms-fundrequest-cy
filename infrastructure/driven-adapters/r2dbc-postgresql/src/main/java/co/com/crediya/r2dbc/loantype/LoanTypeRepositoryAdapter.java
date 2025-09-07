@@ -22,8 +22,9 @@ implements LoanTypeRepository {
     }
 
     @Override
-    public Mono<LoanType> findById(String id) {
-        return super.findById(id);
+    public Mono<LoanType> findByName(String name) {
+        return repository.findByName(name)
+                .map(this::toEntity);
     }
 
 }
