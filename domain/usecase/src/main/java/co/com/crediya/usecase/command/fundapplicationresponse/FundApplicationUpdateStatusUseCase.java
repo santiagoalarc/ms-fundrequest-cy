@@ -14,13 +14,13 @@ import java.util.List;
 import java.util.logging.Logger;
 
 @RequiredArgsConstructor
-public class FundApplicationResponseUseCase {
+public class FundApplicationUpdateStatusUseCase {
 
     private final FundApplicationRepository fundApplicationRepository;
     private final FundApplicationNotificationGateway notificationGateway;
     private final UserRestService userRestService;
 
-    private final Logger log = Logger.getLogger(FundApplicationResponseUseCase.class.getName());
+    private final Logger log = Logger.getLogger(FundApplicationUpdateStatusUseCase.class.getName());
 
     public Mono<FundApplication> execute(FundApplication fundApplication) {
 
@@ -34,7 +34,6 @@ public class FundApplicationResponseUseCase {
                         .map(fundReq -> fundReq.toBuilder()
                                 .idStatus(statusId)
                                 .build()))
-                .flatMap(fundApplicationRepository::save)
                 .flatMap(fundData -> Mono.just(fundData)
                         .flatMap(fundDataInfo -> userRestService.findUsersByEmail(List.of(fundDataInfo.getEmail())).next())
                         .switchIfEmpty(Mono.defer(() -> Mono.error(new FundException(FundErrorEnum.EMAIL_NOT_FOUND))))
@@ -43,6 +42,7 @@ public class FundApplicationResponseUseCase {
                                 "ACTUALIZACIÓN DE ESTADO DE SOLICITUD DE PRÉSTAMO",
                                 userName,
                                 fundApplication.getStatus()))
+                        .flatMap(message -> fundApplicationRepository.save(fundData))
                 )
                 .thenReturn(fundApplication)
                 .doOnSuccess(fundUpdated -> log.info("UPDATE FUND APPLICATION SUCCESSFUL :: " + fundUpdated));

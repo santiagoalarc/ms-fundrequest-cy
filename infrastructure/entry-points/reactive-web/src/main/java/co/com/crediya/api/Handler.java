@@ -10,7 +10,7 @@ import co.com.crediya.model.common.PageRequestModel;
 import co.com.crediya.model.common.PagedResult;
 import co.com.crediya.model.fundapplication.FundApplicationFilter;
 import co.com.crediya.usecase.command.fundapplication.FundApplicationUseCase;
-import co.com.crediya.usecase.command.fundapplicationresponse.FundApplicationResponseUseCase;
+import co.com.crediya.usecase.command.fundapplicationresponse.FundApplicationUpdateStatusUseCase;
 import co.com.crediya.usecase.handler.FundApplicationListUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -27,7 +27,7 @@ public class Handler {
 
     private final FundApplicationUseCase fundApplicationUseCase;
     private final FundApplicationListUseCase fundApplicationListUseCase;
-    private final FundApplicationResponseUseCase fundApplicationResponseUseCase;
+    private final FundApplicationUpdateStatusUseCase fundApplicationResponseUseCase;
     private final JwtProvider jwtProvider;
     private final FundDtoMapper fundDtoMapper;
 
