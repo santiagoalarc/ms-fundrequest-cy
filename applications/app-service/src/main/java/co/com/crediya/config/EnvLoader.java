@@ -7,7 +7,7 @@ import java.util.stream.Stream;
 
 public class EnvLoader {
 
-    private static final String DEFAULT_ENV_FILE = ".env";
+    private static final String DEFAULT_ENV_FILE = ".env.dev";
 
     public static void loadConfig() {
 
@@ -16,17 +16,11 @@ public class EnvLoader {
             envMode = "default";
         }
 
-        String envFile;
-        switch (envMode.toLowerCase()) {
-            case "production":
-                envFile = ".env.production";
-                break;
-            case "develop":
-                envFile = ".env.develop";
-                break;
-            default:
-                envFile = DEFAULT_ENV_FILE;
-        }
+        String envFile = switch (envMode.toLowerCase()) {
+            case "production" -> ".env.production";
+            case "develop" -> ".env.develop";
+            default -> DEFAULT_ENV_FILE;
+        };
 
         System.out.println("Loading configuration file: " + envFile);
 

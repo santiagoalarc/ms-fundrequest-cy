@@ -28,8 +28,6 @@ public class RestConsumerConfig {
                                          @Value("${adapter.restconsumer.user.host}") String host,
                                          @Value("${adapter.restconsumer.timeout}") int timeout) {
 
-        System.out.println("AUTH HOST CONFIGURED: " + host);
-
         if (host == null || host.trim().isEmpty()) {
             throw new IllegalArgumentException("AUTH_API_URL cannot be null or empty");
         }
