@@ -3,12 +3,14 @@ package co.com.crediya.api;
 import co.com.crediya.api.config.BaseValidator;
 import co.com.crediya.api.dto.CreateFundApplication;
 import co.com.crediya.api.dto.FundAppFilterDTO;
+import co.com.crediya.api.dto.UpdateFundDTO;
 import co.com.crediya.api.mapper.FundDtoMapper;
 import co.com.crediya.api.security.JwtProvider;
 import co.com.crediya.model.common.PageRequestModel;
 import co.com.crediya.model.common.PagedResult;
 import co.com.crediya.model.fundapplication.FundApplicationFilter;
 import co.com.crediya.usecase.command.fundapplication.FundApplicationUseCase;
+import co.com.crediya.usecase.command.fundapplicationresponse.FundApplicationUpdateStatusUseCase;
 import co.com.crediya.usecase.handler.FundApplicationListUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -25,6 +27,7 @@ public class Handler {
 
     private final FundApplicationUseCase fundApplicationUseCase;
     private final FundApplicationListUseCase fundApplicationListUseCase;
+    private final FundApplicationUpdateStatusUseCase fundApplicationResponseUseCase;
     private final JwtProvider jwtProvider;
     private final FundDtoMapper fundDtoMapper;
 
@@ -35,7 +38,7 @@ public class Handler {
         String email = jwtProvider.getSubject(token);
 
         return serverRequest.bodyToMono(CreateFundApplication.class)
-                .doOnNext(user -> BaseValidator.validate(user, "PAYLOAD_NOT_CONTAIN_MINIMUM_FIELDS"))
+                .doOnNext(createFund -> BaseValidator.validate(createFund, "PAYLOAD_NOT_CONTAIN_MINIMUM_FIELDS"))
                 .map(fundDtoMapper::toModel)
                 .flatMap(fundApp -> fundApplicationUseCase.saveFundApplication(fundApp, email))
                 .flatMap(savedFundApplication -> ServerResponse.ok()
@@ -87,5 +90,19 @@ public class Handler {
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(fundApplicationsPage));
 
+    }
+
+    @PreAuthorize("hasAuthority('ASESOR')")
+    public Mono<ServerResponse> responseFundReq(ServerRequest serverRequest){
+
+        return serverRequest.bodyToMono(UpdateFundDTO.class)
+                .map(fundDtoMapper::toModel)
+                .doOnNext(fundApplication -> BaseValidator.validate(fundApplication, "PAYLOAD_NOT_CONTAIN_MINIMUM_FIELDS"))
+                .flatMap(fundApplicationResponseUseCase::execute)
+                .map(fundDtoMapper::toResponse)
+                .flatMap(updateFund -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(updateFund)
+                );
     }
 }

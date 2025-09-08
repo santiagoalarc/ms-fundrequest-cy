@@ -18,6 +18,6 @@ public class LoanType {
     private String creationDate;
     private BigDecimal maxAmount;
     private BigDecimal minAmount;
-    private BigDecimal interestRateTaa;
+    private Double interestRateTaa;
     private boolean autoValidation;
 }

@@ -10,9 +10,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.UUID;
 
 
-public interface FundReactiveRepository extends ReactiveCrudRepository<FundEntity, String>, ReactiveQueryByExampleExecutor<FundEntity> {
+public interface FundReactiveRepository extends ReactiveCrudRepository<FundEntity, UUID>, ReactiveQueryByExampleExecutor<FundEntity> {
 
     @Query("""
        SELECT fa.* FROM fund_application fa

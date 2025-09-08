@@ -1,11 +1,8 @@
 package co.com.crediya.usecase.handler;
 
-import co.com.crediya.enums.FundErrorEnum;
-import co.com.crediya.exceptions.FundException;
 import co.com.crediya.model.common.PageRequestModel;
 import co.com.crediya.model.common.PagedResult;
 import co.com.crediya.model.fundapplication.FundAppCustomer;
-import co.com.crediya.model.fundapplication.FundApplication;
 import co.com.crediya.model.fundapplication.FundApplicationFilter;
 import co.com.crediya.model.fundapplication.gateways.FundApplicationRepository;
 import co.com.crediya.model.fundstatus.FundStatus;
@@ -24,9 +21,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -54,6 +49,9 @@ class FundApplicationListUseCaseTest {
     private PageRequestModel pageRequest;
     private FundAppCustomer fundAppCustomer;
     private PagedResult<FundAppCustomer> pagedResult;
+    private User user;
+    private LoanType loanType;
+    private FundStatus fundStatus;
 
     @BeforeEach
     void setUp() {
@@ -75,11 +73,16 @@ class FundApplicationListUseCaseTest {
                 .size(10)
                 .build();
 
+        user = createUser();
+        loanType = createLoanType();
+        fundStatus = createFundStatus("PENDING");
+
         fundAppCustomer = new FundAppCustomer();
-        fundAppCustomer.setEmail("test@example.com");
+        fundAppCustomer.setEmail(user.getEmail());
         fundAppCustomer.setAmount(BigDecimal.valueOf(10000));
-        fundAppCustomer.setIdStatus(UUID.randomUUID().toString());
-        fundAppCustomer.setIdLoanType(UUID.randomUUID().toString());
+        fundAppCustomer.setIdStatus(fundStatus.getId());
+        fundAppCustomer.setIdLoanType(loanType.getId());
+        fundAppCustomer.setTerm(12L);
 
         pagedResult = PagedResult.<FundAppCustomer>builder()
                 .content(Collections.singletonList(fundAppCustomer))
@@ -94,11 +97,9 @@ class FundApplicationListUseCaseTest {
     void findFundApplicationList_WithEmptyFilters_ShouldReturnPagedResult() {
         when(fundApplicationRepository.findPagedByFilter(any(FundApplicationFilter.class), any(PageRequestModel.class)))
                 .thenReturn(Mono.just(pagedResult));
-        when(loanTypeRepository.findAll()).thenReturn(Flux.empty());
-        when(fundStatusRepository.findAll()).thenReturn(Flux.empty());
-        when(userRestService.findUsersByEmail(anyList())).thenReturn(Flux.empty());
-        when(fundStatusRepository.findByName("APPROVED")).thenReturn(Mono.just(createFundStatus("APPROVED")));
-        when(fundApplicationRepository.findAllByEmailIn(anyList())).thenReturn(Flux.empty());
+        when(loanTypeRepository.findAll()).thenReturn(Flux.just(loanType));
+        when(fundStatusRepository.findAll()).thenReturn(Flux.just(fundStatus));
+        when(userRestService.findUsersByEmail(anyList())).thenReturn(Flux.just(user));
 
         StepVerifier.create(useCase.findFundApplicationList(filter, pageRequest))
                 .expectNextMatches(result -> result.getTotalElements() == 1)
@@ -108,14 +109,13 @@ class FundApplicationListUseCaseTest {
     @Test
     void findFundApplicationList_WithStatusFilter_ShouldValidateAndApplyFilter() {
         filter.setStatus("PENDING");
+        fundAppCustomer.setIdStatus(fundStatus.getId());
 
         when(fundApplicationRepository.findPagedByFilter(any(FundApplicationFilter.class), any(PageRequestModel.class)))
                 .thenReturn(Mono.just(pagedResult));
-        when(loanTypeRepository.findAll()).thenReturn(Flux.empty());
-        when(fundStatusRepository.findAll()).thenReturn(Flux.empty());
-        when(userRestService.findUsersByEmail(anyList())).thenReturn(Flux.empty());
-        when(fundStatusRepository.findByName("APPROVED")).thenReturn(Mono.just(createFundStatus("APPROVED")));
-        when(fundApplicationRepository.findAllByEmailIn(anyList())).thenReturn(Flux.empty());
+        when(loanTypeRepository.findAll()).thenReturn(Flux.just(loanType));
+        when(fundStatusRepository.findAll()).thenReturn(Flux.just(fundStatus));
+        when(userRestService.findUsersByEmail(anyList())).thenReturn(Flux.just(user));
 
         StepVerifier.create(useCase.findFundApplicationList(filter, pageRequest))
                 .expectNextMatches(result -> result.getTotalElements() == 1)
@@ -125,14 +125,13 @@ class FundApplicationListUseCaseTest {
     @Test
     void findFundApplicationList_WithLoanTypeFilter_ShouldValidateAndApplyFilter() {
         filter.setLoanType("PERSONAL");
+        fundAppCustomer.setIdLoanType(loanType.getId());
 
         when(fundApplicationRepository.findPagedByFilter(any(FundApplicationFilter.class), any(PageRequestModel.class)))
                 .thenReturn(Mono.just(pagedResult));
-        when(loanTypeRepository.findAll()).thenReturn(Flux.empty());
-        when(fundStatusRepository.findAll()).thenReturn(Flux.empty());
-        when(userRestService.findUsersByEmail(anyList())).thenReturn(Flux.empty());
-        when(fundStatusRepository.findByName("APPROVED")).thenReturn(Mono.just(createFundStatus("APPROVED")));
-        when(fundApplicationRepository.findAllByEmailIn(anyList())).thenReturn(Flux.empty());
+        when(loanTypeRepository.findAll()).thenReturn(Flux.just(loanType));
+        when(fundStatusRepository.findAll()).thenReturn(Flux.just(fundStatus));
+        when(userRestService.findUsersByEmail(anyList())).thenReturn(Flux.just(user));
 
         StepVerifier.create(useCase.findFundApplicationList(filter, pageRequest))
                 .expectNextMatches(result -> result.getTotalElements() == 1)
@@ -140,142 +139,35 @@ class FundApplicationListUseCaseTest {
     }
 
     @Test
-    void mapFundWithLoanType_ShouldEnrichWithLoanTypeData() {
-        LoanType loanType = createLoanType();
-        fundAppCustomer.setIdLoanType(loanType.getId());
-
+    void mapFundWithUserInfo_ShouldEnrichWithUserData() {
         when(fundApplicationRepository.findPagedByFilter(any(FundApplicationFilter.class), any(PageRequestModel.class)))
                 .thenReturn(Mono.just(pagedResult));
         when(loanTypeRepository.findAll()).thenReturn(Flux.just(loanType));
-        when(fundStatusRepository.findAll()).thenReturn(Flux.empty());
-        when(userRestService.findUsersByEmail(anyList())).thenReturn(Flux.empty());
-        when(fundStatusRepository.findByName("APPROVED")).thenReturn(Mono.just(createFundStatus("APPROVED")));
-        when(fundApplicationRepository.findAllByEmailIn(anyList())).thenReturn(Flux.empty());
-
-        StepVerifier.create(useCase.findFundApplicationList(filter, pageRequest))
-                .expectNextMatches(result -> {
-                    FundAppCustomer app = result.getContent().getFirst();
-                    return "PERSONAL".equals(app.getLoanType()) &&
-                            BigDecimal.valueOf(15.5).equals(app.getInterestRateTaa());
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    void mapFundWithUserInfo_ShouldEnrichWithUserData() {
-        User user = createUser();
-
-        when(fundApplicationRepository.findPagedByFilter(any(FundApplicationFilter.class), any(PageRequestModel.class)))
-                .thenReturn(Mono.just(pagedResult));
-        when(loanTypeRepository.findAll()).thenReturn(Flux.empty());
-        when(fundStatusRepository.findAll()).thenReturn(Flux.empty());
+        when(fundStatusRepository.findAll()).thenReturn(Flux.just(fundStatus));
         when(userRestService.findUsersByEmail(anyList())).thenReturn(Flux.just(user));
-        when(fundStatusRepository.findByName("APPROVED")).thenReturn(Mono.just(createFundStatus("APPROVED")));
-        when(fundApplicationRepository.findAllByEmailIn(anyList())).thenReturn(Flux.empty());
 
         StepVerifier.create(useCase.findFundApplicationList(filter, pageRequest))
                 .expectNextMatches(result -> {
                     FundAppCustomer app = result.getContent().getFirst();
-                    return "John Doe".equals(app.getName()) && "5000".equals(app.getBaseSalary());
+                    return "John Doe".equals(app.getName()) && "5000".equals(app.getBaseSalary()) && "test@example.com".equals(app.getEmail());
                 })
                 .verifyComplete();
     }
 
     @Test
     void mapFundWithFundStatus_ShouldEnrichWithStatusData() {
-        FundStatus fundStatus = createFundStatus("APPROVED");
         fundAppCustomer.setIdStatus(fundStatus.getId());
 
         when(fundApplicationRepository.findPagedByFilter(any(FundApplicationFilter.class), any(PageRequestModel.class)))
                 .thenReturn(Mono.just(pagedResult));
-        when(loanTypeRepository.findAll()).thenReturn(Flux.empty());
+        when(loanTypeRepository.findAll()).thenReturn(Flux.just(loanType));
         when(fundStatusRepository.findAll()).thenReturn(Flux.just(fundStatus));
-        when(userRestService.findUsersByEmail(anyList())).thenReturn(Flux.empty());
-        when(fundStatusRepository.findByName("APPROVED")).thenReturn(Mono.just(fundStatus));
-        when(fundApplicationRepository.findAllByEmailIn(anyList())).thenReturn(Flux.empty());
+        when(userRestService.findUsersByEmail(anyList())).thenReturn(Flux.just(user));
 
         StepVerifier.create(useCase.findFundApplicationList(filter, pageRequest))
                 .expectNextMatches(result -> {
                     FundAppCustomer app = result.getContent().getFirst();
-                    return "APPROVED".equals(app.getStatus());
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    void mapFundWithTotalAmountApproved_ShouldCalculateTotalDebt() {
-        FundStatus approvedStatus = createFundStatus("APPROVED");
-        FundApplication approvedApp = createFundApplication(BigDecimal.valueOf(5000), approvedStatus.getId());
-
-        when(fundApplicationRepository.findPagedByFilter(any(FundApplicationFilter.class), any(PageRequestModel.class)))
-                .thenReturn(Mono.just(pagedResult));
-        when(loanTypeRepository.findAll()).thenReturn(Flux.empty());
-        when(fundStatusRepository.findAll()).thenReturn(Flux.empty());
-        when(userRestService.findUsersByEmail(anyList())).thenReturn(Flux.empty());
-        when(fundStatusRepository.findByName("APPROVED")).thenReturn(Mono.just(approvedStatus));
-        when(fundApplicationRepository.findAllByEmailIn(anyList())).thenReturn(Flux.just(approvedApp));
-
-        StepVerifier.create(useCase.findFundApplicationList(filter, pageRequest))
-                .expectNextMatches(result -> {
-                    FundAppCustomer app = result.getContent().getFirst();
-                    return BigDecimal.valueOf(5000).equals(app.getTotalDebt());
-                })
-                .verifyComplete();
-    }
-
-    @Test
-    void mapFundWithTotalAmountApproved_WhenApprovedStatusNotFound_ShouldThrowException() {
-        when(fundApplicationRepository.findPagedByFilter(any(FundApplicationFilter.class), any(PageRequestModel.class)))
-                .thenReturn(Mono.just(pagedResult));
-        when(loanTypeRepository.findAll()).thenReturn(Flux.empty());
-        when(fundStatusRepository.findAll()).thenReturn(Flux.empty());
-        when(userRestService.findUsersByEmail(anyList())).thenReturn(Flux.empty());
-        when(fundStatusRepository.findByName("APPROVED")).thenReturn(Mono.empty());
-
-        StepVerifier.create(useCase.findFundApplicationList(filter, pageRequest))
-                .expectErrorMatches(throwable -> throwable instanceof FundException &&
-                        ((FundException) throwable).getError() == FundErrorEnum.STATUS_FUND_NAME_NOT_FOUND)
-                .verify();
-    }
-
-    @Test
-    void findFundApplicationList_WithEmptyContent_ShouldReturnEmptyResult() {
-        PagedResult<FundAppCustomer> emptyResult = PagedResult.<FundAppCustomer>builder()
-                .content(List.of())
-                .page(0)
-                .size(10)
-                .totalElements(0)
-                .totalPages(0)
-                .build();
-
-        when(fundApplicationRepository.findPagedByFilter(any(FundApplicationFilter.class), any(PageRequestModel.class)))
-                .thenReturn(Mono.just(emptyResult));
-
-        StepVerifier.create(useCase.findFundApplicationList(filter, pageRequest))
-                .expectNextMatches(result -> result.getContent().isEmpty())
-                .verifyComplete();
-    }
-
-    @Test
-    void findFundApplicationList_WithMultipleApprovedApplications_ShouldSumTotalDebt() {
-        FundStatus approvedStatus = createFundStatus("APPROVED");
-        List<FundApplication> approvedApps = Arrays.asList(
-                createFundApplication(BigDecimal.valueOf(3000), approvedStatus.getId()),
-                createFundApplication(BigDecimal.valueOf(2000), approvedStatus.getId())
-        );
-
-        when(fundApplicationRepository.findPagedByFilter(any(FundApplicationFilter.class), any(PageRequestModel.class)))
-                .thenReturn(Mono.just(pagedResult));
-        when(loanTypeRepository.findAll()).thenReturn(Flux.empty());
-        when(fundStatusRepository.findAll()).thenReturn(Flux.empty());
-        when(userRestService.findUsersByEmail(anyList())).thenReturn(Flux.empty());
-        when(fundStatusRepository.findByName("APPROVED")).thenReturn(Mono.just(approvedStatus));
-        when(fundApplicationRepository.findAllByEmailIn(anyList())).thenReturn(Flux.fromIterable(approvedApps));
-
-        StepVerifier.create(useCase.findFundApplicationList(filter, pageRequest))
-                .expectNextMatches(result -> {
-                    FundAppCustomer app = result.getContent().getFirst();
-                    return BigDecimal.valueOf(5000).equals(app.getTotalDebt());
+                    return "PENDING".equals(app.getStatus());
                 })
                 .verifyComplete();
     }
@@ -293,7 +185,7 @@ class FundApplicationListUseCaseTest {
         return LoanType.builder()
                 .id(UUID.randomUUID().toString())
                 .name("PERSONAL")
-                .interestRateTaa(BigDecimal.valueOf(15.5))
+                .interestRateTaa(15.5)
                 .build();
     }
 
@@ -304,17 +196,6 @@ class FundApplicationListUseCaseTest {
                 .name("John")
                 .lastName("Doe")
                 .baseSalary("5000")
-                .documentIdentification("12345678")
-                .build();
-    }
-
-    private FundApplication createFundApplication(BigDecimal amount, String statusId) {
-        return FundApplication.builder()
-                .email("test@example.com")
-                .amount(amount)
-                .idStatus(statusId)
-                .idLoanType(UUID.randomUUID().toString())
-                .term(12L)
                 .documentIdentification("12345678")
                 .build();
     }

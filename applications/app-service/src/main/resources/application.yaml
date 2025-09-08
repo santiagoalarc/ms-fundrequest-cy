@@ -1,5 +1,5 @@
 server:
-  port: ${PORT:8080}
+  port: "${PORT:8080}"
 spring:
   application:
     name: "MsFundRequest"
@@ -30,37 +30,38 @@ management:
   health:
     circuitbreakers:
       enabled: true
-
 cors:
-  allowed-origins: ${CORS_ALLOWED_ORIGINS}
-
+  allowed-origins: "${CORS_ALLOWED_ORIGINS}"
 jwt:
-  secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION}
-
+  secret: "${JWT_SECRET}"
+  expiration: "${JWT_EXPIRATION}"
 routes:
   paths:
     funds: "/api/v1/solicitud"
     fundsById: "/api/v1/solicitud/{id}"
-    fundsPageable:  "/api/v1/solicitud"
-
+    fundsPageable: "/api/v1/solicitud"
 adapters:
   r2dbc:
-    host: ${SPRING_DATASOURCE_HOST}
-    port: ${SPRING_DATASOURCE_PORT}
-    database: ${SPRING_DATASOURCE_DATABASE}
+    host: "${SPRING_DATASOURCE_HOST}"
+    port: "${SPRING_DATASOURCE_PORT}"
+    database: "${SPRING_DATASOURCE_DATABASE}"
     schema: "public"
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
-
+    username: "${SPRING_DATASOURCE_USERNAME}"
+    password: "${SPRING_DATASOURCE_PASSWORD}"
 adapter:
   restconsumer:
     timeout: 5000
     retry: 2
     user:
-      host: ${AUTH_API_URL}
+      host: "${AUTH_API_URL}"
       url: "/api/v1/usuario/"
       url-users-email: "/api/v1/usuarios-by-email"
+  sqs:
+    region: "us-east-2"
+    queueUrl: "https://sqs.us-east-2.amazonaws.com/675016865295/modifyLoanStatus"
+    accessKey: ${AWS_ACCESS_KEY}
+    secretKey: ${AWS_SECRET_KEY}
+    #endpoint: "http://localhost:4566 # For localstack only"
 resilience4j:
   circuitbreaker:
     instances:

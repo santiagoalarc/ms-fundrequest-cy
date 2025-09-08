@@ -16,13 +16,14 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Repository
 public class FundRepositoryAdapter extends ReactiveAdapterOperations<
         FundApplication,
         FundEntity,
-        String,
+        UUID,
         FundReactiveRepository
         > implements FundApplicationRepository {
 

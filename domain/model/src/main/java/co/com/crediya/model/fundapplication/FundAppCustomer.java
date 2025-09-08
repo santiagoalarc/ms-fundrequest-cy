@@ -15,7 +15,7 @@ public class FundAppCustomer  extends  FundApplication {
 
     private String name;
     private String baseSalary;
-    private BigDecimal interestRateTaa;
-    private BigDecimal totalDebt;
+    private Double interestRateTaa;
+    private BigDecimal monthlyAmount;
     private String status;
 }

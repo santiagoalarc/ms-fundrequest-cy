@@ -4,8 +4,8 @@ import java.math.BigDecimal;
 
 public record FundAppFilterDTO(String name,
                                String baseSalary,
-                               BigDecimal interestRateTaa,
-                               BigDecimal totalDebt,
+                               Double interestRateTaa,
+                               BigDecimal monthlyAmount,
                                String status,
                                BigDecimal amount,
                                Long term,

@@ -1,5 +1,11 @@
 package co.com.crediya.enums;
 
+import lombok.Getter;
+
+import java.util.Arrays;
+import java.util.Objects;
+
+@Getter
 public enum FundStatusEnum {
 
     PENDING("7f32a490-9eda-4393-89c2-cd3b9c49ecac"),
@@ -15,7 +21,11 @@ public enum FundStatusEnum {
         this.id = id;
     }
 
-    public String getId() {
-        return id;
+    public static String getIdFromName(String name){
+        return Arrays.stream(FundStatusEnum.values())
+                .filter(status -> Objects.equals(status.name(), name))
+                .map(FundStatusEnum::getId)
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("OBJECT_STATUS_ID_NOT_VALID"));
     }
 }
