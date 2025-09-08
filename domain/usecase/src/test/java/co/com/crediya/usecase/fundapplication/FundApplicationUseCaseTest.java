@@ -67,7 +67,7 @@ class FundApplicationUseCaseTest {
                 .name("PERSONAL")
                 .minAmount(new BigDecimal("1000"))
                 .maxAmount(new BigDecimal("10000"))
-                .interestRateTaa(new BigDecimal("15.5"))
+                .interestRateTaa(15.5)
                 .autoValidation(false)
                 .build();
 
