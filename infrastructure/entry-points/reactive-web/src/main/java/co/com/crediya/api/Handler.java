@@ -1,16 +1,19 @@
 package co.com.crediya.api;
 
 import co.com.crediya.api.config.BaseValidator;
+import co.com.crediya.api.dto.CapacityReqDTO;
 import co.com.crediya.api.dto.CreateFundApplication;
 import co.com.crediya.api.dto.FundAppFilterDTO;
 import co.com.crediya.api.dto.UpdateFundDTO;
+import co.com.crediya.api.mapper.CapacityMapper;
 import co.com.crediya.api.mapper.FundDtoMapper;
 import co.com.crediya.api.security.JwtProvider;
 import co.com.crediya.model.common.PageRequestModel;
 import co.com.crediya.model.common.PagedResult;
 import co.com.crediya.model.fundapplication.FundApplicationFilter;
+import co.com.crediya.usecase.command.automaticcapacitycalculation.CalculateCapacityUseCase;
 import co.com.crediya.usecase.command.fundapplication.FundApplicationUseCase;
-import co.com.crediya.usecase.command.fundapplicationresponse.FundApplicationUpdateStatusUseCase;
+import co.com.crediya.usecase.command.fundapplicationupdatestatus.FundApplicationUpdateStatusUseCase;
 import co.com.crediya.usecase.handler.FundApplicationListUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -28,8 +31,12 @@ public class Handler {
     private final FundApplicationUseCase fundApplicationUseCase;
     private final FundApplicationListUseCase fundApplicationListUseCase;
     private final FundApplicationUpdateStatusUseCase fundApplicationResponseUseCase;
+    private final CalculateCapacityUseCase calculateCapacityUseCase;
     private final JwtProvider jwtProvider;
     private final FundDtoMapper fundDtoMapper;
+    private final CapacityMapper capacityMapper;
+
+    private final static String EMPTY = "";
 
     @PreAuthorize("hasAuthority('USER')")
     public Mono<ServerResponse> listenSaveFundApplication(ServerRequest serverRequest) {
@@ -49,9 +56,9 @@ public class Handler {
     @PreAuthorize("hasAuthority('ASESOR')")
     public Mono<ServerResponse> getFundApplicationList(ServerRequest serverRequest) {
 
-        String email = serverRequest.queryParam("email").orElse("");
-        String status = serverRequest.queryParam("status").orElse("");
-        String loanType = serverRequest.queryParam("loanType").orElse("");
+        String email = serverRequest.queryParam("email").orElse(EMPTY);
+        String status = serverRequest.queryParam("status").orElse(EMPTY);
+        String loanType = serverRequest.queryParam("loanType").orElse(EMPTY);
         String pageSizeString = serverRequest.queryParam("size").orElse("10");
         String pageNumberString = serverRequest.queryParam("page").orElse("1");
         int size, page;
@@ -93,7 +100,7 @@ public class Handler {
     }
 
     @PreAuthorize("hasAuthority('ASESOR')")
-    public Mono<ServerResponse> responseFundReq(ServerRequest serverRequest){
+    public Mono<ServerResponse> responseFundReq(ServerRequest serverRequest) {
 
         return serverRequest.bodyToMono(UpdateFundDTO.class)
                 .map(fundDtoMapper::toModel)
@@ -103,6 +110,20 @@ public class Handler {
                 .flatMap(updateFund -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(updateFund)
+                );
+    }
+
+    @PreAuthorize("hasAuthority('ASESOR')")
+    public Mono<ServerResponse> calculateCapacity(ServerRequest serverRequest) {
+
+        return serverRequest.bodyToMono(CapacityReqDTO.class)
+                .doOnNext(capacityReqDTO -> BaseValidator.validate(capacityReqDTO, "PAYLOAD_NOT_CONTAIN_MINIMUM_FIELDS"))
+                .map(capacityMapper::toRequest)
+                .flatMap(userCapacity -> calculateCapacityUseCase.execute(userCapacity.getEmail(), userCapacity.getFundId()))
+                .map(capacityMapper::toResponse)
+                .flatMap(capacityOUTDto -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(capacityOUTDto)
                 );
     }
 }

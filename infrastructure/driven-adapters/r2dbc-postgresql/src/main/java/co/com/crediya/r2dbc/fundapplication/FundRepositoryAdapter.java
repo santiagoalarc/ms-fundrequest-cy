@@ -15,7 +15,6 @@ import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -60,9 +59,9 @@ public class FundRepositoryAdapter extends ReactiveAdapterOperations<
     }
 
     @Override
-    public Flux<FundApplication> findAllByEmailIn(List<String> emails) {
-
-        return repository.findAllByEmailIn(emails)
+    public Flux<FundApplication> findByEmail(String email) {
+        return repository.findAllByEmail(email)
                 .map(this::toEntity);
     }
+
 }

@@ -8,7 +8,6 @@ import co.com.crediya.model.fundapplication.FundApplicationFilter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface FundApplicationRepository {
@@ -19,6 +18,6 @@ public interface FundApplicationRepository {
 
     Mono<PagedResult<FundAppCustomer>> findPagedByFilter(FundApplicationFilter filter, PageRequestModel pageRequestModel);
 
-    Flux<FundApplication> findAllByEmailIn(List<String> emails);
+    Flux<FundApplication> findByEmail(String email);
 
 }

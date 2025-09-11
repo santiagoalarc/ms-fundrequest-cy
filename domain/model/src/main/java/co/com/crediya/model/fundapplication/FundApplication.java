@@ -23,6 +23,7 @@ public class FundApplication {
     private String idLoanType;
     private String loanType;
     private String status;
+    private boolean automatic;
 
     public BigDecimal calculateMonthlyAmount(Double interestRateTaa) {
 
