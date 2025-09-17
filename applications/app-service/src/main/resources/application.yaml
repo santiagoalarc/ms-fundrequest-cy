@@ -61,6 +61,7 @@ adapter:
     region: "us-east-2"
     queueUrl: "https://sqs.us-east-2.amazonaws.com/675016865295/modifyLoanStatus"
     queueCapacityUrl: "https://sqs.us-east-2.amazonaws.com/675016865295/loan-capacity-calculation"
+    queueApprovedAmountLoanUrl: "https://sqs.us-east-2.amazonaws.com/675016865295/approvedLoanQueue"
     accessKey: "${AWS_ACCESS_KEY}"
     secretKey: "${AWS_SECRET_KEY}"
 resilience4j:

@@ -1,7 +1,8 @@
-package co.com.crediya.sqs.sender.config;
+package co.com.crediya.sqs.sender;
 
 import co.com.crediya.model.user.UserCapacity;
 import co.com.crediya.model.user.gateways.CalculateCapacityGateway;
+import co.com.crediya.sqs.sender.config.SQSSenderProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
