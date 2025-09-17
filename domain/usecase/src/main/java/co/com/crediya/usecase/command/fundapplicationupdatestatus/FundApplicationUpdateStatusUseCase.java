@@ -1,4 +1,4 @@
-package co.com.crediya.usecase.command.fundapplicationresponse;
+package co.com.crediya.usecase.command.fundapplicationupdatestatus;
 
 import co.com.crediya.enums.FundErrorEnum;
 import co.com.crediya.enums.FundStatusEnum;

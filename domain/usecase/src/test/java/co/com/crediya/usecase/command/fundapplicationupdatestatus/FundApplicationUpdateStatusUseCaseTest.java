@@ -1,4 +1,4 @@
-package co.com.crediya.usecase.command.fundapplicationresponse;
+package co.com.crediya.usecase.command.fundapplicationupdatestatus;
 
 
 import co.com.crediya.enums.FundErrorEnum;
@@ -69,7 +69,7 @@ class FundApplicationUpdateStatusUseCaseTest {
                 .status(FundStatusEnum.PENDING.name())
                 .email(email)
                 .build();
-        
+
         User user = User.builder()
                 .name("Jose")
                 .lastName("Arroyo")

@@ -90,4 +90,6 @@ public class RestConsumer implements UserRestService {
                 });
 
     }
+
+    //TODO hacen falta los fallbacks
 }

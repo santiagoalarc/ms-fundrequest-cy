@@ -8,7 +8,9 @@ import co.com.crediya.model.fundapplication.gateways.FundApplicationRepository;
 import co.com.crediya.model.loantype.LoanType;
 import co.com.crediya.model.loantype.gateways.LoanTypeRepository;
 import co.com.crediya.model.user.User;
+import co.com.crediya.model.user.UserCapacity;
 import co.com.crediya.model.user.gateways.UserRestService;
+import co.com.crediya.usecase.command.automaticcapacitycalculation.CalculateCapacityUseCase;
 import co.com.crediya.usecase.command.fundapplication.FundApplicationUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +37,9 @@ class FundApplicationUseCaseTest {
     private LoanTypeRepository loanTypeRepository;
 
     @Mock
+    private CalculateCapacityUseCase calculateCapacityUseCase;
+
+    @Mock
     private UserRestService userRestService;
 
     private FundApplicationUseCase fundApplicationUseCase;
@@ -48,6 +53,7 @@ class FundApplicationUseCaseTest {
     void setUp() {
         fundApplicationUseCase = new FundApplicationUseCase(
                 fundApplicationRepository,
+                calculateCapacityUseCase,
                 loanTypeRepository,
                 userRestService
         );
@@ -84,6 +90,7 @@ class FundApplicationUseCaseTest {
     @Test
     void saveFundApplication_Success() {
         FundApplication expectedSavedFundApp = fundApplication.toBuilder()
+                .id(UUID.randomUUID())
                 .idLoanType(loanType.getId())
                 .idStatus(FundStatusEnum.PENDING.getId())
                 .build();
@@ -96,6 +103,31 @@ class FundApplicationUseCaseTest {
                 .expectNext(expectedSavedFundApp)
                 .verifyComplete();
     }
+
+    @Test
+    void saveFundApplicationAutomaticLoan_Success() {
+        FundApplication expectedSavedFundApp = fundApplication.toBuilder()
+                .id(UUID.randomUUID())
+                .idLoanType(loanType.getId())
+                .idStatus(FundStatusEnum.PENDING.getId())
+                .build();
+
+        LoanType automaticLoanType = loanType.toBuilder()
+                .autoValidation(Boolean.TRUE)
+                .build();
+
+        UserCapacity userCapacity = UserCapacity.builder().build();
+
+        when(loanTypeRepository.findByName("PERSONAL")).thenReturn(Mono.just(automaticLoanType));
+        when(userRestService.findUserByDocumentNumber("12345678")).thenReturn(Mono.just(user));
+        when(calculateCapacityUseCase.execute(fundApplication.getEmail(), expectedSavedFundApp.getId())).thenReturn(Mono.just(userCapacity));
+        when(fundApplicationRepository.save(any(FundApplication.class))).thenReturn(Mono.just(expectedSavedFundApp));
+
+        StepVerifier.create(fundApplicationUseCase.saveFundApplication(fundApplication, email))
+                .expectNext(expectedSavedFundApp)
+                .verifyComplete();
+    }
+
 
     @Test
     void saveFundApplication_TokenUserMismatch() {

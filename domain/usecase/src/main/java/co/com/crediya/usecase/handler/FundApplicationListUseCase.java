@@ -32,7 +32,7 @@ public class FundApplicationListUseCase {
     private final Logger log = Logger.getLogger(FundApplicationListUseCase.class.getName());
 
     public Mono<PagedResult<FundAppCustomer>> findFundApplicationList(FundApplicationFilter fundApFilter, PageRequestModel pageRequestModel) {
-        log.info("Finding fund applications with filters" + fundApFilter.toString());
+        log.info("Enter to FundApplicationListUseCase ::  with filters" + fundApFilter.toString());
 
         return Mono.just(fundApFilter)
                 .flatMap(fundApplicationFilter -> fundApplicationRepository.findPagedByFilter(fundApplicationFilter, pageRequestModel))

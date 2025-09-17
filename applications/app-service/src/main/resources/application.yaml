@@ -40,6 +40,7 @@ routes:
     funds: "/api/v1/solicitud"
     fundsById: "/api/v1/solicitud/{id}"
     fundsPageable: "/api/v1/solicitud"
+    calculateCapacity: "/api/v1/calcular-capacidad"
 adapters:
   r2dbc:
     host: "${SPRING_DATASOURCE_HOST}"
@@ -59,9 +60,9 @@ adapter:
   sqs:
     region: "us-east-2"
     queueUrl: "https://sqs.us-east-2.amazonaws.com/675016865295/modifyLoanStatus"
-    accessKey: ${AWS_ACCESS_KEY}
-    secretKey: ${AWS_SECRET_KEY}
-    #endpoint: "http://localhost:4566 # For localstack only"
+    queueCapacityUrl: "https://sqs.us-east-2.amazonaws.com/675016865295/loan-capacity-calculation"
+    accessKey: "${AWS_ACCESS_KEY}"
+    secretKey: "${AWS_SECRET_KEY}"
 resilience4j:
   circuitbreaker:
     instances:
@@ -83,3 +84,14 @@ resilience4j:
         slidingWindowSize: 10
         minimumNumberOfCalls: 10
         waitDurationInOpenState: "10s"
+entrypoint:
+  sqs:
+    region: "us-east-2"
+    ##endpoint: "http://localhost:4566"
+    updateLoanStatusQueueUrl: "https://sqs.us-east-2.amazonaws.com/675016865295/updateLoanStatusQueue"
+    accessKey: "${AWS_ACCESS_KEY}"
+    secretKey: "${AWS_SECRET_KEY}"
+    waitTimeSeconds: 20
+    maxNumberOfMessages: 10
+    visibilityTimeoutSeconds: 10
+    numberOfThreads: 1

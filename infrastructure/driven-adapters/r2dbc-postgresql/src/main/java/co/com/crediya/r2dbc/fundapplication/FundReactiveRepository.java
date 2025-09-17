@@ -9,7 +9,6 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.UUID;
 
 
@@ -45,6 +44,6 @@ public interface FundReactiveRepository extends ReactiveCrudRepository<FundEntit
             @Param("loanType") String loanType
     );
 
-    Flux<FundEntity> findAllByEmailIn(List<String> emails);
+    Flux<FundEntity> findAllByEmail(String email);
 
 }

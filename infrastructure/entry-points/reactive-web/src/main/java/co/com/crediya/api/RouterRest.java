@@ -1,6 +1,8 @@
 package co.com.crediya.api;
 
 import co.com.crediya.api.config.FundPath;
+import co.com.crediya.api.dto.CapacityReqDTO;
+import co.com.crediya.api.dto.CapacityResDTO;
 import co.com.crediya.api.dto.CreateFundApplication;
 import co.com.crediya.api.dto.UpdateFundDTO;
 import co.com.crediya.api.exceptions.ErrorResponse;
@@ -262,6 +264,85 @@ public class RouterRest {
     ))
     public RouterFunction<ServerResponse> routerResponseFundReq(Handler handler){
         return route(PUT(fundPath.getFunds()), fundApplicationHandler::responseFundReq);
+    }
+
+
+    @Bean
+    @RouterOperation(operation = @Operation(
+            operationId = "calculateUserCapacity",
+            summary = "Calculate user lending capacity",
+            description = "Calculates the lending capacity for a specific user based on their financial profile and the requested fund application. This endpoint performs automatic capacity calculation considering user's income, expenses, existing debts, and other financial factors to determine the maximum amount that can be approved for lending. Requires ASESOR authority for access.",
+            tags = { "Fund Application Management" },
+            security = @SecurityRequirement(name = "bearerAuth"),
+            requestBody = @RequestBody(
+                    description = "Capacity calculation request data containing user email and fund application ID",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = CapacityReqDTO.class)
+                    )
+            ),
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "User capacity calculated successfully. Returns the calculated lending capacity and related financial information for the specified user and fund application.",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = CapacityResDTO.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "Bad Request - Invalid request data. This can occur when: required fields (email or fundId) are missing, email format is invalid, or fundId is not a valid UUID format.",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "Unauthorized - Invalid or missing JWT token. Authentication is required to access this endpoint.",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "403",
+                            description = "Forbidden - User does not have required ASESOR (advisor) authority to perform capacity calculations.",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Not Found - Either the user with the specified email or the fund application with the provided ID does not exist in the system.",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "422",
+                            description = "Unprocessable Entity - Business rule validation failed. This can occur when the user's financial data is incomplete or insufficient for capacity calculation, or when the fund application is not in a valid state for capacity assessment.",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Internal Server Error - Unexpected error occurred while performing the capacity calculation process.",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    )
+            }
+    ))
+    public RouterFunction<ServerResponse> routeCalculateCapacity(Handler handler){
+        return route(POST(fundPath.getCalculateCapacity()), fundApplicationHandler::calculateCapacity);
     }
 
 }
