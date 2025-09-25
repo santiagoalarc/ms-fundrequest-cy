@@ -41,6 +41,7 @@ routes:
     fundsById: "/api/v1/solicitud/{id}"
     fundsPageable: "/api/v1/solicitud"
     calculateCapacity: "/api/v1/calcular-capacidad"
+    findLoansToday: "/api/v1/solicitud/loans-today"
 adapters:
   r2dbc:
     host: "${SPRING_DATASOURCE_HOST}"
@@ -49,6 +50,8 @@ adapters:
     schema: "public"
     username: "${SPRING_DATASOURCE_USERNAME}"
     password: "${SPRING_DATASOURCE_PASSWORD}"
+    options:
+      sslmode: require
 adapter:
   restconsumer:
     timeout: 5000

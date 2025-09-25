@@ -20,4 +20,6 @@ public interface FundApplicationRepository {
 
     Flux<FundApplication> findByEmail(String email);
 
+    Flux<FundApplication> findByUpdateDateBetween(long startDate, long endDate);
+
 }

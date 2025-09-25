@@ -46,4 +46,7 @@ public interface FundReactiveRepository extends ReactiveCrudRepository<FundEntit
 
     Flux<FundEntity> findAllByEmail(String email);
 
+    @Query("SELECT * FROM fund_application WHERE update_date BETWEEN :startDate AND :endDate")
+    Flux<FundEntity> findByUpdateDateBetween(long startDate, long endDate);
+
 }

@@ -25,4 +25,6 @@ public class FundEntity {
     private String idStatus;
     @Column("id_loan_type")
     private String idLoanType;
+    @Column("update_date")
+    private Long updateDate;
 }

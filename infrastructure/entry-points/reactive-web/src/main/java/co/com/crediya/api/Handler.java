@@ -14,6 +14,7 @@ import co.com.crediya.model.fundapplication.FundApplicationFilter;
 import co.com.crediya.usecase.command.automaticcapacitycalculation.CalculateCapacityUseCase;
 import co.com.crediya.usecase.command.fundapplication.FundApplicationUseCase;
 import co.com.crediya.usecase.command.fundapplicationupdatestatus.FundApplicationUpdateStatusUseCase;
+import co.com.crediya.usecase.handler.FindLoansTodayUseCase;
 import co.com.crediya.usecase.handler.FundApplicationListUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -32,6 +33,7 @@ public class Handler {
     private final FundApplicationListUseCase fundApplicationListUseCase;
     private final FundApplicationUpdateStatusUseCase fundApplicationResponseUseCase;
     private final CalculateCapacityUseCase calculateCapacityUseCase;
+    private final FindLoansTodayUseCase findLoansTodayUseCase;
     private final JwtProvider jwtProvider;
     private final FundDtoMapper fundDtoMapper;
     private final CapacityMapper capacityMapper;
@@ -121,6 +123,18 @@ public class Handler {
                 .map(capacityMapper::toRequest)
                 .flatMap(userCapacity -> calculateCapacityUseCase.execute(userCapacity.getEmail(), userCapacity.getFundId()))
                 .map(capacityMapper::toResponse)
+                .flatMap(capacityOUTDto -> ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(capacityOUTDto)
+                );
+    }
+
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public Mono<ServerResponse> findLoansToday(ServerRequest serverRequest) {
+
+        return findLoansTodayUseCase.execute()
+                .map(fundDtoMapper::toResponseToday)
+                .collectList()
                 .flatMap(capacityOUTDto -> ServerResponse.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(capacityOUTDto)
