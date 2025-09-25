@@ -2,6 +2,7 @@ package co.com.crediya.api.mapper;
 
 import co.com.crediya.api.dto.CreateFundApplication;
 import co.com.crediya.api.dto.FundAppFilterDTO;
+import co.com.crediya.api.dto.FundTodayDTO;
 import co.com.crediya.api.dto.UpdateFundDTO;
 import co.com.crediya.model.fundapplication.FundAppCustomer;
 import co.com.crediya.model.fundapplication.FundApplication;
@@ -17,5 +18,7 @@ public interface FundDtoMapper {
     FundApplication toModel(UpdateFundDTO updateFundDTO);
 
     UpdateFundDTO toResponse(FundApplication fundApplication);
+
+    FundTodayDTO toResponseToday(FundApplication fundApplication);
 
 }

@@ -11,6 +11,8 @@ import co.com.crediya.usecase.common.ValidateApprovalStatusUseCase;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -37,6 +39,7 @@ public class FundApplicationUpdateStatusUseCase {
                         .switchIfEmpty(Mono.defer(() -> Mono.error(new FundException(FundErrorEnum.FUND_APPLICATION_STATUS_IS_THE_SAME))))
                         .map(fundReq -> fundReq.toBuilder()
                                 .idStatus(statusId)
+                                .updateDate(ZonedDateTime.now(ZoneId.of("America/Bogota")).toInstant().toEpochMilli())
                                 .build()))
                 .flatMap(fundData -> Mono.just(fundData)
                         .flatMap(fundDataInfo -> userRestService.findUsersByEmail(List.of(fundDataInfo.getEmail())).next())

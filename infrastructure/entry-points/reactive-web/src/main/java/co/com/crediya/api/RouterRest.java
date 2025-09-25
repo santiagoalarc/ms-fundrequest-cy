@@ -1,10 +1,7 @@
 package co.com.crediya.api;
 
 import co.com.crediya.api.config.FundPath;
-import co.com.crediya.api.dto.CapacityReqDTO;
-import co.com.crediya.api.dto.CapacityResDTO;
-import co.com.crediya.api.dto.CreateFundApplication;
-import co.com.crediya.api.dto.UpdateFundDTO;
+import co.com.crediya.api.dto.*;
 import co.com.crediya.api.exceptions.ErrorResponse;
 import co.com.crediya.model.common.PagedResult;
 import co.com.crediya.model.fundapplication.FundApplication;
@@ -343,6 +340,56 @@ public class RouterRest {
     ))
     public RouterFunction<ServerResponse> routeCalculateCapacity(Handler handler){
         return route(POST(fundPath.getCalculateCapacity()), fundApplicationHandler::calculateCapacity);
+    }
+
+    @Bean
+    @RouterOperation(operation = @Operation(
+            operationId = "findLoansToday",
+            summary = "Get today's loan applications",
+            description = "Retrieves a list of all loan applications processed or created today. This endpoint provides a daily report of loan activity, showing the amount and term for each loan processed within the current day. This is typically used for daily reporting, monitoring, and administrative oversight. Requires ADMIN authority for access due to the sensitive nature of comprehensive loan data.",
+            tags = { "Loan Reports", "Fund Application Management" },
+            security = @SecurityRequirement(name = "bearerAuth"),
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Today's loan applications retrieved successfully. Returns a list of loan summaries containing amount and term information for all loans processed today.",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(
+                                            type = "array",
+                                            implementation = FundTodayDTO.class,
+                                            description = "List of loan applications processed today with amount and term details"
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "Unauthorized - Invalid or missing JWT token. Authentication is required to access this endpoint.",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "403",
+                            description = "Forbidden - User does not have required ADMIN authority to access today's loan report. This endpoint is restricted to administrative users only.",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Internal Server Error - Unexpected error occurred while retrieving today's loan applications.",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    )
+            }
+    ))
+    public RouterFunction<ServerResponse> findLoansToday(Handler handler){
+        return route(GET(fundPath.getFindLoansToday()), fundApplicationHandler::findLoansToday);
     }
 
     @Bean

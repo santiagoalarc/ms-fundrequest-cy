@@ -13,4 +13,5 @@ public class FundPath {
     private String fundsById;
     private String fundsPageable;
     private String calculateCapacity;
+    private String findLoansToday;
 }

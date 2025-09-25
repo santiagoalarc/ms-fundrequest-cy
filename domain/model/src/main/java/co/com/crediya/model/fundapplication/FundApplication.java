@@ -24,6 +24,7 @@ public class FundApplication {
     private String loanType;
     private String status;
     private boolean automatic;
+    private Long updateDate;
 
     public BigDecimal calculateMonthlyAmount(Double interestRateTaa) {
 

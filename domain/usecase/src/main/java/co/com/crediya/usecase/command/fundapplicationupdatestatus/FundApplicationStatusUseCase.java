@@ -9,6 +9,8 @@ import co.com.crediya.usecase.common.ValidateApprovalStatusUseCase;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.logging.Logger;
 
 @RequiredArgsConstructor
@@ -32,10 +34,12 @@ public class FundApplicationStatusUseCase {
                         .switchIfEmpty(Mono.defer(() -> Mono.error(new FundException(FundErrorEnum.FUND_APPLICATION_STATUS_IS_THE_SAME))))
                         .map(fundReq -> fundReq.toBuilder()
                                 .idStatus(statusId)
+                                .updateDate(ZonedDateTime.now(ZoneId.of("America/Bogota")).toInstant().toEpochMilli())
                                 .build())
                 )
                 .flatMap(fundApplicationRepository::save)
-                .doOnNext(validateApprovalStatusUseCase::validateStatusAndSend)
+                .flatMap(validateApprovalStatusUseCase::validateStatusAndSend)
+                .thenReturn(fundApplication)
                 .doOnSuccess(fundUpdated -> log.info("UPDATE FUND APPLICATION SUCCESSFUL :: " + fundUpdated));
 
     }

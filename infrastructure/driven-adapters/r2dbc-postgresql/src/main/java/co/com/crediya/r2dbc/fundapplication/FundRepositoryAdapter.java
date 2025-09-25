@@ -64,4 +64,11 @@ public class FundRepositoryAdapter extends ReactiveAdapterOperations<
                 .map(this::toEntity);
     }
 
+    @Override
+    public Flux<FundApplication> findByUpdateDateBetween(long startDate, long endDate) {
+
+        return repository.findByUpdateDateBetween(startDate, endDate)
+                .map(this::toEntity);
+    }
+
 }

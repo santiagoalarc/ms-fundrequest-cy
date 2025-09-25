@@ -22,7 +22,9 @@ public class JwtFilter implements WebFilter {
                 path.startsWith("/v3/api-docs") ||
                 path.startsWith("/api-docs") ||
                 path.startsWith("/favicon.ico") ||
-                path.startsWith("/health")
+                path.startsWith("/health") ||
+                path.startsWith("/actuador/health") ||
+                path.startsWith("/actuador/prometheus")
         )
             return chain.filter(exchange);
         String auth = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
@@ -36,4 +38,3 @@ public class JwtFilter implements WebFilter {
         return chain.filter(exchange);
     }
 }
-
