@@ -49,8 +49,7 @@ public class FundApplicationUseCase {
                         .idStatus(FundStatusEnum.PENDING.getId())
                         .build())
                 .flatMap(fundApp -> fundApplicationRepository.save(fundApp)
-                        .flatMap(fundData -> calculateCapacity(fundApp, fundData))
-                )
+                        .flatMap(fundData -> calculateCapacity(fundApp, fundData)))
                 .doOnError(err -> log.info("ERROR IN CREATE FUND APPLICATION " + err.getMessage()))
                 .doOnSuccess(userCreated -> log.info("CREATE FUND APPLICATION SUCCESSFUL :: " + userCreated));
     }

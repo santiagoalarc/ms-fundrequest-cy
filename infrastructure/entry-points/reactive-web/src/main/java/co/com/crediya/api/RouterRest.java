@@ -345,4 +345,45 @@ public class RouterRest {
         return route(POST(fundPath.getCalculateCapacity()), fundApplicationHandler::calculateCapacity);
     }
 
+    @Bean
+    @RouterOperation(operation = @Operation(
+            operationId = "healthCheck",
+            summary = "Health check endpoint",
+            description = "Simple health check endpoint to verify that the API service is running and responding correctly. This endpoint can be used by monitoring systems, load balancers, or orchestration tools to check service availability. No authentication is required for this endpoint.",
+            tags = { "Health Check" },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Service is healthy and running correctly",
+                            content = @Content(
+                                    mediaType = "text/plain",
+                                    schema = @Schema(
+                                            type = "string",
+                                            example = "ok",
+                                            description = "Simple text response indicating service health status"
+                                    )
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "500",
+                            description = "Internal server error - Service may be experiencing issues",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "503",
+                            description = "Service unavailable - Service is temporarily unable to handle requests",
+                            content = @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = ErrorResponse.class)
+                            )
+                    )
+            }
+    ))
+    public RouterFunction<ServerResponse> healthCheck(){
+        return route(GET("/health"), fundApplicationHandler::healthCheck);
+    }
+
 }

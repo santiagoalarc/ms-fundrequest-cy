@@ -126,4 +126,8 @@ public class Handler {
                         .bodyValue(capacityOUTDto)
                 );
     }
+
+    public Mono<ServerResponse> healthCheck(ServerRequest serverRequest){
+        return ServerResponse.ok().bodyValue("ok");
+    }
 }

@@ -9,6 +9,7 @@ import co.com.crediya.model.fundapplication.gateways.FundApplicationNotification
 import co.com.crediya.model.fundapplication.gateways.FundApplicationRepository;
 import co.com.crediya.model.user.User;
 import co.com.crediya.model.user.gateways.UserRestService;
+import co.com.crediya.usecase.common.ValidateApprovalStatusUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +37,9 @@ class FundApplicationUpdateStatusUseCaseTest {
     @Mock
     private UserRestService userRestService;
 
+    @Mock
+    private ValidateApprovalStatusUseCase validateApprovalStatusUseCase;
+
 
     private FundApplicationUpdateStatusUseCase fundApplicationUpdateStatusUseCase;
 
@@ -44,6 +48,7 @@ class FundApplicationUpdateStatusUseCaseTest {
     void setUp() {
 
         fundApplicationUpdateStatusUseCase = new FundApplicationUpdateStatusUseCase(
+                validateApprovalStatusUseCase,
                 fundApplicationRepository,
                 fundApplicationNotificationGateway,
                 userRestService
@@ -67,6 +72,7 @@ class FundApplicationUpdateStatusUseCaseTest {
         FundApplication fundAppFound = FundApplication.builder()
                 .id(fundId)
                 .status(FundStatusEnum.PENDING.name())
+                .idStatus(FundStatusEnum.PENDING.getId())
                 .email(email)
                 .build();
 
@@ -92,6 +98,7 @@ class FundApplicationUpdateStatusUseCaseTest {
                 FundStatusEnum.APPROVED.name()
         )).thenReturn(Mono.just(expectedMessage));
         when(fundApplicationRepository.save(any(FundApplication.class))).thenReturn(Mono.just(anyFundSaved));
+        when(validateApprovalStatusUseCase.validateStatusAndSend(any(FundApplication.class))).thenReturn(Mono.empty());
 
         StepVerifier.create(fundApplicationUpdateStatusUseCase.execute(fundToUpdated))
                 .expectNext(fundToUpdated)
@@ -137,6 +144,7 @@ class FundApplicationUpdateStatusUseCaseTest {
         FundApplication fundAppFound = FundApplication.builder()
                 .id(UUID.randomUUID())
                 .status(FundStatusEnum.PENDING.name())
+                .idStatus(FundStatusEnum.PENDING.getId())
                 .email("joe@arroyo.com")
                 .build();
 
@@ -146,6 +154,28 @@ class FundApplicationUpdateStatusUseCaseTest {
         StepVerifier.create(fundApplicationUpdateStatusUseCase.execute(fundToUpdated))
                 .expectErrorMatches(throwable -> throwable instanceof FundException
                         && ((FundException) throwable).getError() == FundErrorEnum.EMAIL_NOT_FOUND).verify();
+    }
+
+    @Test
+    void updateFundApplication_SameStatus_ERROR() {
+
+        FundApplication fundToUpdated = FundApplication.builder()
+                .id(UUID.randomUUID())
+                .status(FundStatusEnum.APPROVED.name())
+                .build();
+
+        FundApplication fundAppFound = FundApplication.builder()
+                .id(UUID.randomUUID())
+                .status(FundStatusEnum.APPROVED.name())
+                .idStatus(FundStatusEnum.APPROVED.getId())
+                .email("joe@arroyo.com")
+                .build();
+
+        when(fundApplicationRepository.findById(fundToUpdated.getId())).thenReturn(Mono.just(fundAppFound));
+
+        StepVerifier.create(fundApplicationUpdateStatusUseCase.execute(fundToUpdated))
+                .expectErrorMatches(throwable -> throwable instanceof FundException
+                        && ((FundException) throwable).getError() == FundErrorEnum.FUND_APPLICATION_STATUS_IS_THE_SAME).verify();
     }
 
 
